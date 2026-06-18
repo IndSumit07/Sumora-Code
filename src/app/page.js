@@ -75,9 +75,6 @@ export default function EditorPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [saveStatus, setSaveStatus] = useState("idle");
   const [saveStatusVisible, setSaveStatusVisible] = useState(false);
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [saveDialogName, setSaveDialogName] = useState("");
-  const saveDialogInputRef = useRef(null);
 
   // ── Resize state ─────────────────────────────────────────────────────────
   const [editorWidthPx, setEditorWidthPx] = useState(null);
@@ -197,27 +194,46 @@ export default function EditorPage() {
     }
   }, []);
 
-  const handleNewFile = useCallback(
-    async (question) => {
-      const snippet = LANGUAGES[language]?.snippet ?? LANGUAGES[defaultLang].snippet;
+  const handleNewFile = useCallback(async () => {
+    const snippet = LANGUAGES[language]?.snippet ?? LANGUAGES[defaultLang].snippet;
+    try {
+      const res = await fetch("/api/codes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: "Untitled", language, code: snippet, input: "" }),
+      });
+      if (!res.ok) return;
+      const newFile = await res.json();
+      setCurrentFileId(newFile._id);
+      setCurrentFileName(newFile.question);
+      setCode(snippet);
+      setInput("");
+      await fetchFiles();
+    } catch {
+      // silently fail
+    }
+  }, [language, fetchFiles]);
+
+  const handleRenameFile = useCallback(
+    async (newName) => {
+      if (!currentFileId) return;
+      setCurrentFileName(newName);
       try {
-        const res = await fetch("/api/codes", {
-          method: "POST",
+        await fetch(`/api/codes/${currentFileId}`, {
+          method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question, language, code: snippet, input: "" }),
+          body: JSON.stringify({ question: newName }),
         });
-        if (!res.ok) return;
-        const newFile = await res.json();
-        setCurrentFileId(newFile._id);
-        setCurrentFileName(newFile.question);
-        setCode(snippet);
-        setInput("");
-        await fetchFiles();
+        setFiles((prev) =>
+          prev.map((f) =>
+            f._id === currentFileId ? { ...f, question: newName } : f
+          )
+        );
       } catch {
         // silently fail
       }
     },
-    [language, fetchFiles]
+    [currentFileId]
   );
 
   const handleDeleteFile = useCallback(
@@ -241,10 +257,25 @@ export default function EditorPage() {
   const handleSave = useCallback(async () => {
     if (saveStatus === "saving") return;
 
+    // If no file is open yet, create one with Untitled + current code
     if (!currentFileId) {
-      // No file selected — show save-as dialog
-      setShowSaveDialog(true);
-      setTimeout(() => saveDialogInputRef.current?.focus(), 50);
+      setSaveStatus("saving");
+      setSaveStatusVisible(true);
+      try {
+        const res = await fetch("/api/codes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: "Untitled", language, code, input }),
+        });
+        if (!res.ok) throw new Error("Save failed");
+        const newFile = await res.json();
+        setCurrentFileId(newFile._id);
+        setCurrentFileName(newFile.question);
+        setSaveStatus("saved");
+        await fetchFiles();
+      } catch {
+        setSaveStatus("error");
+      }
       return;
     }
 
@@ -269,33 +300,7 @@ export default function EditorPage() {
     } catch {
       setSaveStatus("error");
     }
-  }, [currentFileId, language, code, input, saveStatus]);
-
-  const handleSaveAs = useCallback(async () => {
-    const name = saveDialogName.trim();
-    if (!name) return;
-
-    setShowSaveDialog(false);
-    setSaveDialogName("");
-    setSaveStatus("saving");
-    setSaveStatusVisible(true);
-
-    try {
-      const res = await fetch("/api/codes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: name, language, code, input }),
-      });
-      if (!res.ok) throw new Error("Save failed");
-      const newFile = await res.json();
-      setCurrentFileId(newFile._id);
-      setCurrentFileName(newFile.question);
-      setSaveStatus("saved");
-      await fetchFiles();
-    } catch {
-      setSaveStatus("error");
-    }
-  }, [saveDialogName, language, code, input, fetchFiles]);
+  }, [currentFileId, language, code, input, saveStatus, fetchFiles]);
 
   // ── Code execution ────────────────────────────────────────────────────────
   const handleRun = useCallback(async () => {
@@ -457,6 +462,7 @@ export default function EditorPage() {
               onChange={(val) => setCode(val ?? "")}
               theme={theme}
               fileName={currentFileName || null}
+              onRename={handleRenameFile}
             />
           </div>
 
@@ -484,57 +490,6 @@ export default function EditorPage() {
           </div>
         </main>
       </div>
-
-      {/* ── Save-as dialog ── */}
-      {showSaveDialog && (
-        <div
-          className="save-dialog-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowSaveDialog(false);
-              setSaveDialogName("");
-            }
-          }}
-        >
-          <div className="save-dialog">
-            <div className="save-dialog-title">Save code as</div>
-            <div className="save-dialog-lang">{LANGUAGES[language]?.label ?? language}</div>
-            <input
-              ref={saveDialogInputRef}
-              type="text"
-              className="save-dialog-input"
-              placeholder="Enter question name…"
-              value={saveDialogName}
-              onChange={(e) => setSaveDialogName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSaveAs();
-                if (e.key === "Escape") {
-                  setShowSaveDialog(false);
-                  setSaveDialogName("");
-                }
-              }}
-            />
-            <div className="save-dialog-actions">
-              <button
-                className="save-dialog-btn save-dialog-btn-cancel"
-                onClick={() => {
-                  setShowSaveDialog(false);
-                  setSaveDialogName("");
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                className="save-dialog-btn save-dialog-btn-primary"
-                onClick={handleSaveAs}
-                disabled={!saveDialogName.trim()}
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

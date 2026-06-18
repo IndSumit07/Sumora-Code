@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import dynamic from "next/dynamic";
+import { Pencil, Check, X } from "lucide-react";
 
 // Monaco must be loaded client-side only
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
@@ -132,15 +133,82 @@ function defineThemes(monaco) {
   monaco.editor.defineTheme("cp-light", LIGHT_THEME);
 }
 
+// ── Inline filename edit ────────────────────────────────────────────────────
+
+function FilenameLabel({ fileName, onRename }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(fileName);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    setDraft(fileName);
+  }, [fileName]);
+
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editing]);
+
+  const commit = () => {
+    const trimmed = draft.trim();
+    if (trimmed && trimmed !== fileName) {
+      onRename(trimmed);
+    }
+    setEditing(false);
+  };
+
+  const cancel = () => {
+    setDraft(fileName);
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <form
+        className="panel-label editor-filename editor-filename-edit"
+        onSubmit={(e) => { e.preventDefault(); commit(); }}
+      >
+        <input
+          ref={inputRef}
+          className="editor-filename-input"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") cancel();
+          }}
+        />
+        <button type="submit" className="editor-filename-action" aria-label="Confirm rename"><Check size={13} /></button>
+        <button type="button" className="editor-filename-action" onClick={cancel} aria-label="Cancel rename"><X size={13} /></button>
+      </form>
+    );
+  }
+
+  return (
+    <div className="panel-label editor-filename">
+      <span className="editor-filename-text">{fileName}</span>
+      <button
+        className="editor-filename-edit-btn"
+        onClick={() => setEditing(true)}
+        title="Rename file"
+        aria-label="Rename file"
+      >
+        <Pencil size={12} />
+      </button>
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function EditorPanel({ language, monacoLang, value, onChange, theme, fileName }) {
+export default function EditorPanel({ language, monacoLang, value, onChange, theme, fileName, onRename }) {
   const monacoRef = useRef(null);
   const editorRef = useRef(null);
 
   const monacoTheme = theme === "dark" ? "cp-dark" : "cp-light";
 
-  // Update theme when it changes
   useEffect(() => {
     if (monacoRef.current) {
       monacoRef.current.editor.setTheme(monacoTheme);
@@ -155,7 +223,6 @@ export default function EditorPanel({ language, monacoLang, value, onChange, the
       defineThemes(monaco);
       monaco.editor.setTheme(monacoTheme);
 
-      // Focus the editor on mount
       editor.focus();
     },
     [monacoTheme]
@@ -163,7 +230,7 @@ export default function EditorPanel({ language, monacoLang, value, onChange, the
 
   const options = {
     fontSize: 14,
-    lineHeight: 22,           // ~1.6 at 14px
+    lineHeight: 22,
     fontFamily:
       "var(--font-editor), 'JetBrains Mono', 'Fira Code', ui-monospace, monospace",
     fontLigatures: true,
@@ -192,6 +259,7 @@ export default function EditorPanel({ language, monacoLang, value, onChange, the
 
   return (
     <div className="panel editor-panel fade-in" style={{ flex: 1 }}>
+      {fileName && <FilenameLabel fileName={fileName} onRename={onRename} />}
       <MonacoEditor
         height="100%"
         language={monacoLang}

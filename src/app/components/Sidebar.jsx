@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { FileText, Trash2, Plus } from "lucide-react";
 
 export default function Sidebar({
@@ -11,15 +10,6 @@ export default function Sidebar({
   onNewFile,
   onDeleteFile,
 }) {
-  const [newFileName, setNewFileName] = useState("");
-
-  const handleCreateFile = () => {
-    const name = newFileName.trim();
-    if (!name) return;
-    onNewFile(name);
-    setNewFileName("");
-  };
-
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
     const d = new Date(dateStr);
@@ -39,32 +29,14 @@ export default function Sidebar({
     <aside className={`sidebar${isOpen ? "" : " collapsed"}`}>
       <div className="sidebar-header">
         <span className="sidebar-header-title">Your Codes</span>
-      </div>
-
-      {/* New file input */}
-      <div style={{ padding: "10px 12px" }}>
-        <div style={{ display: "flex", gap: 6 }}>
-          <input
-            type="text"
-            className="sidebar-new-input"
-            placeholder="New question name…"
-            value={newFileName}
-            onChange={(e) => setNewFileName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleCreateFile();
-            }}
-            style={{ flex: 1 }}
-          />
-          <button
-            className="sidebar-new-btn"
-            onClick={handleCreateFile}
-            disabled={!newFileName.trim()}
-            title="Create new file"
-            aria-label="Create new file"
-          >
-            <Plus size={15} />
-          </button>
-        </div>
+        <button
+          className="sidebar-new-file-btn"
+          onClick={onNewFile}
+          title="New file"
+          aria-label="Create new file"
+        >
+          <Plus size={15} />
+        </button>
       </div>
 
       {/* File list */}

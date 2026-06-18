@@ -111,6 +111,83 @@ body {
   transition: var(--transition-theme);
 }
 
+.editor-filename {
+  text-transform: none;
+  letter-spacing: 0.03em;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  word-break: break-word;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.editor-filename-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-filename-edit-btn {
+  opacity: 0;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: opacity 120ms, color 120ms;
+  flex-shrink: 0;
+}
+.editor-filename:hover .editor-filename-edit-btn {
+  opacity: 1;
+}
+.editor-filename-edit-btn:hover {
+  color: var(--text-primary);
+}
+
+.editor-filename-edit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 14px 4px;
+}
+
+.editor-filename-input {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 700;
+  padding: 4px 8px;
+  outline: none;
+  min-width: 0;
+}
+.editor-filename-input:focus {
+  border-color: var(--text-secondary);
+}
+
+.editor-filename-action {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.editor-filename-action:hover {
+  color: var(--text-primary);
+  background: var(--bg-base);
+}
+
 /* ─── Top Bar ────────────────────────────────────────────────────────────── */
 .topbar {
   background: var(--bg-topbar);
@@ -451,6 +528,24 @@ body {
 .sidebar-new-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+.sidebar-new-file-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+.sidebar-new-file-btn:hover {
+  background: var(--bg-base);
+  color: var(--text-primary);
 }
 
 .sidebar-list {
