@@ -134,7 +134,7 @@ function defineThemes(monaco) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function EditorPanel({ language, monacoLang, value, onChange, theme }) {
+export default function EditorPanel({ language, monacoLang, value, onChange, theme, fileName }) {
   const monacoRef = useRef(null);
   const editorRef = useRef(null);
 

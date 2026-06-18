@@ -1,7 +1,10 @@
 "use client";
 
+import { PanelLeft, Save } from "lucide-react";
+import SaveIndicator from "./SaveIndicator";
+
 /**
- * TopBar — three controls only: language dropdown, run button, theme toggle.
+ * TopBar — sidebar toggle, save button, language dropdown, run button, theme toggle, save status.
  */
 export default function TopBar({
   language,
@@ -10,13 +13,42 @@ export default function TopBar({
   isRunning,
   theme,
   onThemeToggle,
+  onToggleSidebar,
+  isSidebarOpen,
+  saveStatus,
+  saveStatusVisible,
+  onSave,
 }) {
   return (
     <header className="topbar" role="banner">
+      {/* Sidebar toggle */}
+      <button
+        className="sidebar-toggle-btn"
+        onClick={onToggleSidebar}
+        aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+        title={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+      >
+        <PanelLeft size={17} />
+      </button>
+
       {/* Brand */}
       <span className="topbar-brand">
         Sumora<span> Code</span>
       </span>
+
+      {/* Save button */}
+      <button
+        className="save-btn"
+        onClick={onSave}
+        aria-label="Save (Ctrl+S)"
+        title="Save (Ctrl+S)"
+      >
+        <Save size={14} />
+        Save
+      </button>
+
+      {/* Save status indicator */}
+      <SaveIndicator status={saveStatus} visible={saveStatusVisible} />
 
       {/* Language selector */}
       <label htmlFor="language-select" className="sr-only">
@@ -39,13 +71,13 @@ export default function TopBar({
         className="run-btn"
         onClick={onRun}
         disabled={isRunning}
-        aria-label={isRunning ? "Running…" : "Run code (Ctrl+Enter)"}
+        aria-label={isRunning ? "Running..." : "Run code (Ctrl+Enter)"}
         title="Run (Ctrl+Enter)"
       >
         {isRunning ? (
           <>
             <span className="spinner" aria-hidden="true" />
-            Running…
+            Running...
           </>
         ) : (
           <>

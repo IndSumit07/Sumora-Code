@@ -1,0 +1,15 @@
+"use client";
+
+import { Loader2, Check, X } from "lucide-react";
+
+export default function SaveIndicator({ status, visible }) {
+  if (!visible || status === "idle") return null;
+
+  return (
+    <span className={`save-status ${status}`}>
+      {status === "saving" && <Loader2 size={16} className="animate-spin" />}
+      {status === "saved" && <Check size={16} />}
+      {status === "error" && <X size={16} />}
+    </span>
+  );
+}
