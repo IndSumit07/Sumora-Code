@@ -13,7 +13,10 @@ export default function LoginPage() {
 
   useEffect(() => {
     fetch("/api/auth/me")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error("Not authenticated");
+        return r.json();
+      })
       .then((data) => {
         if (data.authenticated) {
           router.replace("/");

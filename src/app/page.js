@@ -86,7 +86,10 @@ export default function EditorPage() {
     document.documentElement.setAttribute("data-theme", savedTheme);
 
     fetch("/api/auth/me")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error("Not OK");
+        return r.json();
+      })
       .then((data) => {
         if (!data.authenticated) {
           router.replace("/login");
@@ -95,6 +98,9 @@ export default function EditorPage() {
           fetchFiles();
           setMounted(true);
         }
+      })
+      .catch(() => {
+        router.replace("/login");
       });
   }, []);
 
