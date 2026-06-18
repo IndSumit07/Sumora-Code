@@ -15,7 +15,7 @@ export default function TopBar({
     <header className="topbar" role="banner">
       {/* Brand */}
       <span className="topbar-brand">
-        CP<span>Editor</span>
+        Sumora<span> Code</span>
       </span>
 
       {/* Language selector */}

@@ -232,15 +232,13 @@ body {
 .editor-area {
   flex: 1;
   display: flex;
-  gap: 10px;
   padding: 10px;
   overflow: hidden;
   min-height: 0;
 }
 
-/* Desktop: editor left, IO right */
+/* Desktop: editor left, IO right — widths controlled by inline style */
 .editor-col {
-  flex: 0 0 65%;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -251,7 +249,6 @@ body {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
 
 /* Tablet */
@@ -280,15 +277,72 @@ body {
   }
 }
 
-/* ─── IO Panel sizing ────────────────────────────────────────────────────── */
+/* ─── IO Panel sizing — heights controlled by inline style ──────────────── */
 .input-panel {
-  flex: 0 0 35%;
   min-height: 0;
+  overflow: hidden;
 }
 
 .output-panel {
   flex: 1;
   min-height: 0;
+  overflow: hidden;
+}
+
+/* ─── Resize Handles ─────────────────────────────────────────────────────── */
+.resize-handle {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 150ms ease;
+}
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  background: var(--border-subtle);
+  border-radius: 99px;
+  transition: background 200ms ease;
+}
+.resize-handle:hover::after,
+.resize-handle.dragging::after {
+  background: var(--text-muted);
+}
+
+/* Horizontal handle (editor ↔ sidebar) */
+.resize-handle-h {
+  width: 10px;
+  cursor: col-resize;
+  height: 100%;
+}
+.resize-handle-h::after {
+  width: 3px;
+  height: 36px;
+  border-radius: 99px;
+}
+
+/* Vertical handle (input ↔ output) */
+.resize-handle-v {
+  height: 10px;
+  width: 100%;
+  cursor: row-resize;
+}
+.resize-handle-v::after {
+  height: 3px;
+  width: 36px;
+  border-radius: 99px;
+}
+
+/* Prevent text selection while dragging */
+.is-resizing {
+  user-select: none;
+  cursor: col-resize;
+}
+.is-resizing-v {
+  user-select: none;
+  cursor: row-resize;
 }
 
 /* ─── IO Textarea & Output ───────────────────────────────────────────────── */

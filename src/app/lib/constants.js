@@ -3,10 +3,12 @@ export const LANGUAGES = {
   java: {
     label: "Java",
     monacoLang: "java",
-    judge0Id: 62,
-    snippet: `public class Main {
+    judge0Id: 62, // Java (OpenJDK 13.0.1)
+    snippet: `import java.util.*;
+public class Main {
     public static void main(String[] args) {
-        System.out.println("Hello, World!");
+        Scanner sc = new Scanner(System.in);
+     
     }
 }
 `,
@@ -14,12 +16,15 @@ export const LANGUAGES = {
   cpp: {
     label: "C++",
     monacoLang: "cpp",
-    judge0Id: 54,
-    snippet: `#include <iostream>
+    judge0Id: 54, // C++ (GCC 9.2.0)
+    snippet: `#include <bits/stdc++.h>
 using namespace std;
 
 int main() {
-    cout << "Hello, World!" << endl;
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    
+    
     return 0;
 }
 `,

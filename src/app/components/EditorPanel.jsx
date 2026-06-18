@@ -134,7 +134,7 @@ function defineThemes(monaco) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function EditorPanel({ language, value, onChange, theme }) {
+export default function EditorPanel({ language, monacoLang, value, onChange, theme }) {
   const monacoRef = useRef(null);
   const editorRef = useRef(null);
 
@@ -194,7 +194,7 @@ export default function EditorPanel({ language, value, onChange, theme }) {
     <div className="panel editor-panel fade-in" style={{ flex: 1 }}>
       <MonacoEditor
         height="100%"
-        language={language === "cpp" ? "cpp" : "java"}
+        language={monacoLang}
         value={value}
         onChange={onChange}
         onMount={handleMount}

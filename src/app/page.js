@@ -20,7 +20,6 @@ function loadPersistedState() {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (Date.now() - parsed.savedAt > STATE_TTL_MS) {
-      // Expired — discard
       localStorage.removeItem(STORAGE_KEY);
       return null;
     }
@@ -44,17 +43,13 @@ function saveState(state) {
       STORAGE_KEY,
       JSON.stringify({ ...state, savedAt: Date.now() })
     );
-  } catch {
-    // Storage quota exceeded or unavailable — silently fail
-  }
+  } catch {}
 }
 
 function saveTheme(theme) {
   try {
     localStorage.setItem(THEME_KEY, theme);
-  } catch {
-    // noop
-  }
+  } catch {}
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
@@ -62,7 +57,7 @@ function saveTheme(theme) {
 export default function EditorPage() {
   const defaultLang = "java";
 
-  // ── State ────────────────────────────────────────────────────────────────
+  // ── Core state ───────────────────────────────────────────────────────────
   const [mounted, setMounted] = useState(false);
   const [theme, setTheme] = useState("dark");
   const [language, setLanguage] = useState(defaultLang);
@@ -72,16 +67,25 @@ export default function EditorPage() {
   const [isError, setIsError] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
 
+  // ── Resize state ─────────────────────────────────────────────────────────
+  // editorWidthPct: editor column % of the editor-area width (25–80)
+  const [editorWidthPct, setEditorWidthPct] = useState(65);
+  // inputHeightPct: input panel % of the io-col height (15–80)
+  const [inputHeightPct, setInputHeightPct] = useState(35);
+  const [isDraggingH, setIsDraggingH] = useState(false);
+  const [isDraggingV, setIsDraggingV] = useState(false);
+
+  // Refs for resize calculations
+  const editorAreaRef = useRef(null);
+  const ioColRef = useRef(null);
   const saveTimerRef = useRef(null);
 
-  // ── On mount: restore persisted state ────────────────────────────────────
+  // ── On mount: restore state ───────────────────────────────────────────────
   useEffect(() => {
-    // Theme (no expiry)
     const savedTheme = loadPersistedTheme();
     setTheme(savedTheme);
     document.documentElement.setAttribute("data-theme", savedTheme);
 
-    // Code state (2-hour TTL)
     const saved = loadPersistedState();
     if (saved) {
       setLanguage(saved.language || defaultLang);
@@ -92,39 +96,25 @@ export default function EditorPage() {
     setMounted(true);
   }, []);
 
-  // ── Debounced persist on change ───────────────────────────────────────────
+  // ── Debounced persist ─────────────────────────────────────────────────────
   const debounceSave = useCallback((newState) => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => {
-      saveState(newState);
-    }, DEBOUNCE_MS);
+    saveTimerRef.current = setTimeout(() => saveState(newState), DEBOUNCE_MS);
   }, []);
 
-  // Persist whenever relevant state changes (after mount)
   useEffect(() => {
     if (!mounted) return;
     debounceSave({ language, code, input });
   }, [language, code, input, mounted, debounceSave]);
 
-  // Cleanup debounce timer on unmount
-  useEffect(() => {
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    };
-  }, []);
+  useEffect(() => () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); }, []);
 
   // ── Language change ───────────────────────────────────────────────────────
   const handleLanguageChange = useCallback(
     (newLang) => {
       setLanguage(newLang);
-      // Only reset code to snippet if the current code matches another lang's snippet
-      // (i.e., user hasn't written custom code yet)
-      const currentIsDefault = Object.values(LANGUAGES).some(
-        (l) => l.snippet === code
-      );
-      if (currentIsDefault) {
-        setCode(LANGUAGES[newLang].snippet);
-      }
+      const currentIsDefault = Object.values(LANGUAGES).some((l) => l.snippet === code);
+      if (currentIsDefault) setCode(LANGUAGES[newLang].snippet);
     },
     [code]
   );
@@ -152,9 +142,7 @@ export default function EditorPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ language, code, stdin: input }),
       });
-
       const data = await res.json();
-
       if (!res.ok || data.error) {
         setOutput(data.error || "An unexpected error occurred.");
         setIsError(true);
@@ -170,10 +158,16 @@ export default function EditorPage() {
     }
   }, [isRunning, language, code, input]);
 
-  // ── Keyboard shortcut: Ctrl/Cmd+Enter ────────────────────────────────────
+  // ── Keyboard shortcuts: Ctrl/Cmd+Enter and Alt+' ──────────────────────────
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Ctrl/Cmd + Enter
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        handleRun();
+      }
+      // Alt + ' (apostrophe)
+      if (e.altKey && e.key === "'") {
         e.preventDefault();
         handleRun();
       }
@@ -182,26 +176,62 @@ export default function EditorPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleRun]);
 
-  // ── Apply theme on first render (before hydration, prevent flash) ─────────
-  // This is handled via the data-theme attribute set above.
-  // We suppress hydration mismatch by not rendering until mounted.
+  // ── Horizontal resize (editor ↔ sidebar) ─────────────────────────────────
+  const startHResize = useCallback((e) => {
+    e.preventDefault();
+    setIsDraggingH(true);
+
+    const onMouseMove = (e) => {
+      const container = editorAreaRef.current;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      // Account for 10px handle width in the calculation
+      const pct = ((e.clientX - rect.left) / rect.width) * 100;
+      setEditorWidthPct(Math.min(Math.max(pct, 20), 80));
+    };
+
+    const onMouseUp = () => {
+      setIsDraggingH(false);
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  }, []);
+
+  // ── Vertical resize (input ↔ output) ─────────────────────────────────────
+  const startVResize = useCallback((e) => {
+    e.preventDefault();
+    setIsDraggingV(true);
+
+    const onMouseMove = (e) => {
+      const container = ioColRef.current;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const pct = ((e.clientY - rect.top) / rect.height) * 100;
+      setInputHeightPct(Math.min(Math.max(pct, 10), 75));
+    };
+
+    const onMouseUp = () => {
+      setIsDraggingV(false);
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  }, []);
+
+  // ── Loading shell ─────────────────────────────────────────────────────────
   if (!mounted) {
-    return (
-      <div
-        className="app-shell"
-        style={{
-          background: "var(--bg-base)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-        aria-hidden="true"
-      />
-    );
+    return <div className="app-shell" aria-hidden="true" />;
   }
 
   return (
-    <div className="app-shell">
+    <div
+      className={`app-shell${isDraggingH ? " is-resizing" : ""}${isDraggingV ? " is-resizing-v" : ""}`}
+    >
       {/* ── Top bar ── */}
       <TopBar
         language={language}
@@ -213,24 +243,39 @@ export default function EditorPage() {
       />
 
       {/* ── Main editor area ── */}
-      <main className="editor-area" role="main">
+      <main className="editor-area" ref={editorAreaRef} role="main">
         {/* Left: Monaco editor */}
-        <div className="editor-col">
+        <div
+          className="editor-col"
+          style={{ flex: `0 0 ${editorWidthPct}%`, minWidth: 0 }}
+        >
           <EditorPanel
             language={language}
+            monacoLang={LANGUAGES[language]?.monacoLang ?? "java"}
             value={code}
             onChange={(val) => setCode(val ?? "")}
             theme={theme}
           />
         </div>
 
+        {/* Horizontal resize handle */}
+        <div
+          className={`resize-handle resize-handle-h${isDraggingH ? " dragging" : ""}`}
+          onMouseDown={startHResize}
+          title="Drag to resize editor"
+          aria-hidden="true"
+        />
+
         {/* Right: stdin + stdout */}
-        <div className="io-col">
+        <div style={{ flex: 1, minWidth: 0 }}>
           <IOPanel
             input={input}
             onInputChange={setInput}
             output={output}
             isError={isError}
+            inputHeightPct={inputHeightPct}
+            onVResizeStart={startVResize}
+            containerRef={ioColRef}
           />
         </div>
       </main>
