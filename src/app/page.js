@@ -5,30 +5,9 @@ import TopBar from "./components/TopBar";
 import EditorPanel from "./components/EditorPanel";
 import IOPanel from "./components/IOPanel";
 import Sidebar from "./components/Sidebar";
-import {
-  LANGUAGES,
-  STORAGE_KEY,
-  THEME_KEY,
-  DEBOUNCE_MS,
-  STATE_TTL_MS,
-} from "./lib/constants";
+import { LANGUAGES, THEME_KEY } from "./lib/constants";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-function loadPersistedState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (Date.now() - parsed.savedAt > STATE_TTL_MS) {
-      localStorage.removeItem(STORAGE_KEY);
-      return null;
-    }
-    return parsed;
-  } catch {
-    return null;
-  }
-}
 
 function loadPersistedTheme() {
   try {
@@ -36,15 +15,6 @@ function loadPersistedTheme() {
   } catch {
     return "dark";
   }
-}
-
-function saveState(state) {
-  try {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ ...state, savedAt: Date.now() })
-    );
-  } catch {}
 }
 
 function saveTheme(theme) {
@@ -62,7 +32,7 @@ export default function EditorPage() {
   const [mounted, setMounted] = useState(false);
   const [theme, setTheme] = useState("dark");
   const [language, setLanguage] = useState(defaultLang);
-  const [code, setCode] = useState(LANGUAGES[defaultLang].snippet);
+  const [code, setCode] = useState("");
   const [input, setInput] = useState("");
   const [output, setOutput] = useState(null);
   const [isError, setIsError] = useState(false);
@@ -86,7 +56,6 @@ export default function EditorPage() {
   // Refs
   const editorAreaRef = useRef(null);
   const ioColRef = useRef(null);
-  const saveTimerRef = useRef(null);
   const saveStatusTimerRef = useRef(null);
   const fetchingRef = useRef(false);
 
@@ -107,18 +76,11 @@ export default function EditorPage() {
     }
   }, []);
 
-  // ── On mount: restore state ───────────────────────────────────────────────
+  // ── On mount ──────────────────────────────────────────────────────────────
   useEffect(() => {
     const savedTheme = loadPersistedTheme();
     setTheme(savedTheme);
     document.documentElement.setAttribute("data-theme", savedTheme);
-
-    const saved = loadPersistedState();
-    if (saved) {
-      setLanguage(saved.language || defaultLang);
-      setCode(saved.code ?? LANGUAGES[saved.language || defaultLang].snippet);
-      setInput(saved.input || "");
-    }
 
     fetchFiles();
     setMounted(true);
@@ -139,35 +101,10 @@ export default function EditorPage() {
     };
   }, [saveStatus]);
 
-  // ── Debounced persist to localStorage ────────────────────────────────────
-  const debounceSave = useCallback((newState) => {
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => saveState(newState), DEBOUNCE_MS);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-    debounceSave({ language, code, input });
-  }, [language, code, input, mounted, debounceSave]);
-
-  useEffect(
-    () => () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    },
-    []
-  );
-
   // ── Language change ───────────────────────────────────────────────────────
-  const handleLanguageChange = useCallback(
-    (newLang) => {
-      setLanguage(newLang);
-      const currentIsDefault = Object.values(LANGUAGES).some(
-        (l) => l.snippet === code
-      );
-      if (currentIsDefault) setCode(LANGUAGES[newLang].snippet);
-    },
-    [code]
-  );
+  const handleLanguageChange = useCallback((newLang) => {
+    setLanguage(newLang);
+  }, []);
 
   // ── Theme toggle ──────────────────────────────────────────────────────────
   const handleThemeToggle = useCallback(() => {
@@ -262,15 +199,15 @@ export default function EditorPage() {
   const handleSave = useCallback(async () => {
     if (saveStatus === "saving") return;
 
-    // If no file is open yet, create one with Untitled + current code
     if (!currentFileId) {
       setSaveStatus("saving");
       setSaveStatusVisible(true);
       try {
+        const snippet = LANGUAGES[language]?.snippet ?? LANGUAGES[defaultLang].snippet;
         const res = await fetch("/api/codes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: "Untitled", language, code, input }),
+          body: JSON.stringify({ question: "Untitled", language, code: code || snippet, input }),
         });
         if (!res.ok) throw new Error("Save failed");
         const newFile = await res.json();
@@ -339,18 +276,15 @@ export default function EditorPage() {
   // ── Keyboard shortcuts ──────────────────────────────────────────────────
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Ctrl/Cmd + S — save to MongoDB
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         handleSave();
         return;
       }
-      // Ctrl/Cmd + Enter — run
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault();
         handleRun();
       }
-      // Ctrl + ' (apostrophe) — run
       if (e.ctrlKey && e.key === "'") {
         e.preventDefault();
         handleRun();
@@ -360,7 +294,7 @@ export default function EditorPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleRun, handleSave]);
 
-  // ── Horizontal resize (editor ↔ sidebar) ─ pixel-based ──────────────────
+  // ── Horizontal resize (editor ↔ sidebar) ───────────────────
   const startHResize = useCallback((e) => {
     e.preventDefault();
     setIsDraggingH(true);
@@ -415,13 +349,14 @@ export default function EditorPage() {
     return <div className="app-shell" aria-hidden="true" />;
   }
 
+  const hasActiveFile = currentFileId !== null;
+
   return (
     <div
       className={`app-shell${isDraggingH ? " is-resizing" : ""}${
         isDraggingV ? " is-resizing-v" : ""
       }`}
     >
-      {/* ── Top bar ── */}
       <TopBar
         language={language}
         onLanguageChange={handleLanguageChange}
@@ -436,9 +371,7 @@ export default function EditorPage() {
         onSave={handleSave}
       />
 
-      {/* ── Body: sidebar + editor area ── */}
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
-        {/* Left sidebar */}
         <Sidebar
           isOpen={isSidebarOpen}
           files={files}
@@ -448,30 +381,33 @@ export default function EditorPage() {
           onDeleteFile={handleDeleteFile}
         />
 
-        {/* Main editor area */}
         <main className="editor-area" ref={editorAreaRef} role="main">
-          {/* Left: Monaco editor */}
           <div
             className="editor-col"
             style={{
-              flex: editorWidthPx
-                ? `0 0 ${editorWidthPx}px`
-                : "0 0 65%",
+              flex: editorWidthPx ? `0 0 ${editorWidthPx}px` : "0 0 65%",
               minWidth: 0,
             }}
           >
-            <EditorPanel
-              language={language}
-              monacoLang={LANGUAGES[language]?.monacoLang ?? "java"}
-              value={code}
-              onChange={(val) => setCode(val ?? "")}
-              theme={theme}
-              fileName={currentFileName || null}
-              onRename={handleRenameFile}
-            />
+            {hasActiveFile ? (
+              <EditorPanel
+                language={language}
+                monacoLang={LANGUAGES[language]?.monacoLang ?? "java"}
+                value={code}
+                onChange={(val) => setCode(val ?? "")}
+                theme={theme}
+                fileName={currentFileName || null}
+                onRename={handleRenameFile}
+              />
+            ) : (
+              <div className="panel editor-panel fade-in editor-empty-panel">
+                <div className="editor-watermark" aria-hidden="true">
+                  SUMORA
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Horizontal resize handle */}
           <div
             className={`resize-handle resize-handle-h${
               isDraggingH ? " dragging" : ""
@@ -481,7 +417,6 @@ export default function EditorPage() {
             aria-hidden="true"
           />
 
-          {/* Right: stdin + stdout */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <IOPanel
               input={input}
@@ -496,7 +431,6 @@ export default function EditorPage() {
         </main>
       </div>
 
-      {/* Delete confirmation dialog */}
       {deleteConfirmId && (
         <div
           className="confirm-overlay"

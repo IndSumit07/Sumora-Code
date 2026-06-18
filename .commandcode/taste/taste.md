@@ -15,4 +15,5 @@
 
 # ui-styling
 - Use the same font as the editor (monospace) across all UI text everywhere. Confidence: 0.65
+- The SUMORA watermark must be centered within the code editor area specifically, not across the whole screen. Confidence: 0.70
 

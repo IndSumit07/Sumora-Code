@@ -902,13 +902,20 @@ body {
   justify-content: center;
   font-size: 80px;
   font-weight: 900;
-  font-family: var(--font-ui), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-editor), 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
   letter-spacing: 0.15em;
   color: var(--text-muted);
   opacity: 0.06;
   pointer-events: none;
   user-select: none;
   z-index: 0;
+}
+
+.editor-empty-panel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .editor-panel .monaco-wrapper {
