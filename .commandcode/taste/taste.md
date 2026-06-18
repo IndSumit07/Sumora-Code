@@ -13,3 +13,6 @@
 # workflow
 - Clicking "New question" should immediately create an "Untitled" file with boilerplate (no save dialog/popup). The filename should be editable inline via a pencil/edit button in the code editor header. Confidence: 0.75
 
+# ui-styling
+- Use the same font as the editor (monospace) across all UI text everywhere. Confidence: 0.65
+
