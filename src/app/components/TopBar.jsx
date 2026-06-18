@@ -1,6 +1,6 @@
 "use client";
 
-import { PanelLeft, Save } from "lucide-react";
+import { PanelLeft, Save, LogOut } from "lucide-react";
 import SaveIndicator from "./SaveIndicator";
 
 /**
@@ -18,6 +18,8 @@ export default function TopBar({
   saveStatus,
   saveStatusVisible,
   onSave,
+  userEmail,
+  onLogout,
 }) {
   return (
     <header className="topbar" role="banner">
@@ -95,6 +97,27 @@ export default function TopBar({
           </>
         )}
       </button>
+
+      {/* User email */}
+      {userEmail && (
+        <span className="topbar-user" title={userEmail}>
+          {userEmail.length > 24
+            ? userEmail.slice(0, 22) + "..."
+            : userEmail}
+        </span>
+      )}
+
+      {/* Logout */}
+      {onLogout && (
+        <button
+          className="sidebar-toggle-btn"
+          onClick={onLogout}
+          aria-label="Sign out"
+          title="Sign out"
+        >
+          <LogOut size={15} />
+        </button>
+      )}
 
       {/* Theme toggle */}
       <button

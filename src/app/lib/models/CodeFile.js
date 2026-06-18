@@ -6,6 +6,12 @@ const codeFileSchema = new mongoose.Schema(
     language: { type: String, required: true, default: "java" },
     code: { type: String, default: "" },
     input: { type: String, default: "" },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
+    },
   },
   { timestamps: true }
 );

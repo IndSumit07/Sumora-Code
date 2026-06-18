@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import TopBar from "./components/TopBar";
 import EditorPanel from "./components/EditorPanel";
 import IOPanel from "./components/IOPanel";
@@ -26,10 +27,12 @@ function saveTheme(theme) {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function EditorPage() {
+  const router = useRouter();
   const defaultLang = "java";
 
   // ── Core state ───────────────────────────────────────────────────────────
   const [mounted, setMounted] = useState(false);
+  const [userEmail, setUserEmail] = useState(null);
   const [theme, setTheme] = useState("dark");
   const [language, setLanguage] = useState(defaultLang);
   const [code, setCode] = useState("");
@@ -82,8 +85,17 @@ export default function EditorPage() {
     setTheme(savedTheme);
     document.documentElement.setAttribute("data-theme", savedTheme);
 
-    fetchFiles();
-    setMounted(true);
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.authenticated) {
+          router.replace("/login");
+        } else {
+          setUserEmail(data.email);
+          fetchFiles();
+          setMounted(true);
+        }
+      });
   }, []);
 
   // ── Save status auto-dismiss timer ──────────────────────────────────────
@@ -115,6 +127,12 @@ export default function EditorPage() {
       return next;
     });
   }, []);
+
+  // ── Logout ────────────────────────────────────────────────────────────────
+  const handleLogout = useCallback(async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.replace("/login");
+  }, [router]);
 
   // ── Sidebar handlers ─────────────────────────────────────────────────────
   const handleSelectFile = useCallback(async (file) => {
@@ -369,6 +387,8 @@ export default function EditorPage() {
         saveStatus={saveStatus}
         saveStatusVisible={saveStatusVisible}
         onSave={handleSave}
+        userEmail={userEmail}
+        onLogout={handleLogout}
       />
 
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>

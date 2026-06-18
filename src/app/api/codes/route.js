@@ -1,10 +1,11 @@
 import { connectDB } from "@/app/lib/db";
 import CodeFile from "@/app/lib/models/CodeFile";
+import { requireAuth } from "@/app/lib/auth";
 
-export async function GET() {
+export const GET = requireAuth(async (userId) => {
   try {
     await connectDB();
-    const files = await CodeFile.find({}, "question language updatedAt")
+    const files = await CodeFile.find({ userId }, "question language updatedAt")
       .sort({ updatedAt: -1 })
       .lean();
     return Response.json(files);
@@ -12,9 +13,9 @@ export async function GET() {
     console.error("GET /api/codes error:", err);
     return Response.json({ error: "Failed to fetch files" }, { status: 500 });
   }
-}
+});
 
-export async function POST(request) {
+export const POST = requireAuth(async (userId, request) => {
   try {
     await connectDB();
     const { question, language, code, input } = await request.json();
@@ -28,6 +29,7 @@ export async function POST(request) {
       language: language || "java",
       code: code || "",
       input: input || "",
+      userId,
     });
 
     return Response.json(file.toObject(), { status: 201 });
@@ -35,4 +37,4 @@ export async function POST(request) {
     console.error("POST /api/codes error:", err);
     return Response.json({ error: "Failed to create file" }, { status: 500 });
   }
-}
+});

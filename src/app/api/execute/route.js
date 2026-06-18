@@ -1,11 +1,12 @@
 import { LANGUAGES } from "@/app/lib/constants";
+import { requireAuth } from "@/app/lib/auth";
 
 /**
  * POST /api/execute
  * Body: { language: 'java' | 'cpp', code: string, stdin: string }
  * Returns: { stdout, stderr, compileOutput, status }
  */
-export async function POST(request) {
+export const POST = requireAuth(async (_userId, request) => {
   const apiUrl = process.env.JUDGE0_API_URL;
   const apiKey = process.env.JUDGE0_API_KEY;
 
@@ -142,4 +143,4 @@ export async function POST(request) {
       { status: 503 }
     );
   }
-}
+});
