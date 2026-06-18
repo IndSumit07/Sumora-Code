@@ -11,7 +11,7 @@ export default function IOPanel({
   onInputChange,
   output,
   isError,
-  inputHeightPct,
+  inputHeightPx,
   onVResizeStart,
   containerRef,
 }) {
@@ -34,7 +34,10 @@ export default function IOPanel({
       {/* ── stdin ── */}
       <div
         className="panel input-panel fade-in"
-        style={{ flex: `0 0 ${inputHeightPct}%`, minHeight: 0 }}
+        style={{
+          flex: inputHeightPx ? `0 0 ${inputHeightPx}px` : "0 0 35%",
+          minHeight: 0,
+        }}
       >
         <div className="panel-label">stdin · input</div>
         <textarea

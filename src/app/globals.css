@@ -335,14 +335,28 @@ body {
   border-radius: 99px;
 }
 
-/* Prevent text selection while dragging */
-.is-resizing {
-  user-select: none;
-  cursor: col-resize;
-}
+/* Prevent text selection and event stealing while dragging */
+.is-resizing,
 .is-resizing-v {
   user-select: none;
-  cursor: row-resize;
+}
+.is-resizing {
+  cursor: col-resize !important;
+}
+.is-resizing-v {
+  cursor: row-resize !important;
+}
+
+/* 
+  CRITICAL: Monaco Editor will steal mousemove events if we drag over it. 
+  By disabling pointer-events on the columns while dragging, the document 
+  smoothly catches all mousemove events. 
+*/
+.is-resizing .editor-col,
+.is-resizing .io-col,
+.is-resizing-v .editor-col,
+.is-resizing-v .io-col {
+  pointer-events: none;
 }
 
 /* ─── IO Textarea & Output ───────────────────────────────────────────────── */

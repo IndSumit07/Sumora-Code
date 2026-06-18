@@ -68,10 +68,10 @@ export default function EditorPage() {
   const [isRunning, setIsRunning] = useState(false);
 
   // ── Resize state ─────────────────────────────────────────────────────────
-  // editorWidthPct: editor column % of the editor-area width (25–80)
-  const [editorWidthPct, setEditorWidthPct] = useState(65);
-  // inputHeightPct: input panel % of the io-col height (15–80)
-  const [inputHeightPct, setInputHeightPct] = useState(35);
+  // editorWidthPx: null means use default CSS (65%). Set on first drag.
+  const [editorWidthPx, setEditorWidthPx] = useState(null);
+  // inputHeightPx: input panel height in px. null means use default CSS (35%).
+  const [inputHeightPx, setInputHeightPx] = useState(null);
   const [isDraggingH, setIsDraggingH] = useState(false);
   const [isDraggingV, setIsDraggingV] = useState(false);
 
@@ -158,7 +158,7 @@ export default function EditorPage() {
     }
   }, [isRunning, language, code, input]);
 
-  // ── Keyboard shortcuts: Ctrl/Cmd+Enter and Alt+' ──────────────────────────
+  // ── Keyboard shortcuts: Ctrl/Cmd+Enter and Ctrl+' ────────────────────────
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Ctrl/Cmd + Enter
@@ -166,8 +166,8 @@ export default function EditorPage() {
         e.preventDefault();
         handleRun();
       }
-      // Alt + ' (apostrophe)
-      if (e.altKey && e.key === "'") {
+      // Ctrl + ' (apostrophe)
+      if (e.ctrlKey && e.key === "'") {
         e.preventDefault();
         handleRun();
       }
@@ -176,7 +176,8 @@ export default function EditorPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleRun]);
 
-  // ── Horizontal resize (editor ↔ sidebar) ─────────────────────────────────
+
+  // ── Horizontal resize (editor ↔ sidebar) ─ pixel-based ───────────────────
   const startHResize = useCallback((e) => {
     e.preventDefault();
     setIsDraggingH(true);
@@ -185,9 +186,12 @@ export default function EditorPage() {
       const container = editorAreaRef.current;
       if (!container) return;
       const rect = container.getBoundingClientRect();
-      // Account for 10px handle width in the calculation
-      const pct = ((e.clientX - rect.left) / rect.width) * 100;
-      setEditorWidthPct(Math.min(Math.max(pct, 20), 80));
+      // rect.left includes left padding (10px). Mouse position relative to inner left edge:
+      const mouseX = e.clientX - rect.left - 10; // 10px left padding
+      // Keep editor between 180px and (container - handle - sidebar min)
+      const maxW = rect.width - 20 - 10 - 180; // padding(20) + handle(10) + sidebar min(180)
+      const newW = Math.min(Math.max(mouseX, 180), maxW);
+      setEditorWidthPx(newW);
     };
 
     const onMouseUp = () => {
@@ -209,8 +213,12 @@ export default function EditorPage() {
       const container = ioColRef.current;
       if (!container) return;
       const rect = container.getBoundingClientRect();
-      const pct = ((e.clientY - rect.top) / rect.height) * 100;
-      setInputHeightPct(Math.min(Math.max(pct, 10), 75));
+      // Mouse position relative to top of io-col container
+      const mouseY = e.clientY - rect.top;
+      // Clamp between 80px min for input and (total - handle - 80px min for output)
+      const maxH = rect.height - 10 - 80;
+      const newH = Math.min(Math.max(mouseY, 80), maxH);
+      setInputHeightPx(newH);
     };
 
     const onMouseUp = () => {
@@ -247,7 +255,10 @@ export default function EditorPage() {
         {/* Left: Monaco editor */}
         <div
           className="editor-col"
-          style={{ flex: `0 0 ${editorWidthPct}%`, minWidth: 0 }}
+          style={{
+            flex: editorWidthPx ? `0 0 ${editorWidthPx}px` : "0 0 65%",
+            minWidth: 0,
+          }}
         >
           <EditorPanel
             language={language}
@@ -273,7 +284,7 @@ export default function EditorPage() {
             onInputChange={setInput}
             output={output}
             isError={isError}
-            inputHeightPct={inputHeightPct}
+            inputHeightPx={inputHeightPx}
             onVResizeStart={startVResize}
             containerRef={ioColRef}
           />
