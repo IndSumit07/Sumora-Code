@@ -258,7 +258,12 @@ export default function EditorPanel({ language, monacoLang, value, onChange, the
   };
 
   return (
-    <div className="panel editor-panel fade-in" style={{ flex: 1 }}>
+    <div className="panel editor-panel fade-in" style={{ flex: 1, position: "relative" }}>
+      {!fileName && (
+        <div className="editor-watermark" aria-hidden="true">
+          SUMORA
+        </div>
+      )}
       {fileName && <FilenameLabel fileName={fileName} onRename={onRename} />}
       <MonacoEditor
         height="100%"

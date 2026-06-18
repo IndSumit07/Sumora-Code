@@ -75,6 +75,7 @@ export default function EditorPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [saveStatus, setSaveStatus] = useState("idle");
   const [saveStatusVisible, setSaveStatusVisible] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   // ── Resize state ─────────────────────────────────────────────────────────
   const [editorWidthPx, setEditorWidthPx] = useState(null);
@@ -236,22 +237,26 @@ export default function EditorPage() {
     [currentFileId]
   );
 
-  const handleDeleteFile = useCallback(
-    async (id) => {
-      try {
-        const res = await fetch(`/api/codes/${id}`, { method: "DELETE" });
-        if (!res.ok) return;
-        if (currentFileId === id) {
-          setCurrentFileId(null);
-          setCurrentFileName("");
-        }
-        setFiles((prev) => prev.filter((f) => f._id !== id));
-      } catch {
-        // silently fail
+  const handleDeleteFile = useCallback(async (id) => {
+    setDeleteConfirmId(id);
+  }, []);
+
+  const handleConfirmDelete = useCallback(async () => {
+    const id = deleteConfirmId;
+    setDeleteConfirmId(null);
+    if (!id) return;
+    try {
+      const res = await fetch(`/api/codes/${id}`, { method: "DELETE" });
+      if (!res.ok) return;
+      if (currentFileId === id) {
+        setCurrentFileId(null);
+        setCurrentFileName("");
       }
-    },
-    [currentFileId]
-  );
+      setFiles((prev) => prev.filter((f) => f._id !== id));
+    } catch {
+      // silently fail
+    }
+  }, [deleteConfirmId, currentFileId]);
 
   // ── Save to MongoDB (Ctrl+S) ─────────────────────────────────────────────
   const handleSave = useCallback(async () => {
@@ -490,6 +495,40 @@ export default function EditorPage() {
           </div>
         </main>
       </div>
+
+      {/* Delete confirmation dialog */}
+      {deleteConfirmId && (
+        <div
+          className="confirm-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setDeleteConfirmId(null);
+          }}
+        >
+          <div className="confirm-dialog">
+            <div className="confirm-dialog-title">Delete file?</div>
+            <div className="confirm-dialog-name">
+              {files.find((f) => f._id === deleteConfirmId)?.question ?? "this file"}
+            </div>
+            <div className="confirm-dialog-subtitle">
+              This action cannot be undone.
+            </div>
+            <div className="confirm-dialog-actions">
+              <button
+                className="confirm-dialog-btn confirm-dialog-btn-cancel"
+                onClick={() => setDeleteConfirmId(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="confirm-dialog-btn confirm-dialog-btn-danger"
+                onClick={handleConfirmDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
