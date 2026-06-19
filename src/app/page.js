@@ -49,6 +49,7 @@ export default function EditorPage() {
   const [saveStatus, setSaveStatus] = useState("idle");
   const [saveStatusVisible, setSaveStatusVisible] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [copySignal, setCopySignal] = useState(null);
 
   // ── Resize state ─────────────────────────────────────────────────────────
   const [editorWidthPx, setEditorWidthPx] = useState(null);
@@ -60,6 +61,7 @@ export default function EditorPage() {
   const editorAreaRef = useRef(null);
   const ioColRef = useRef(null);
   const saveStatusTimerRef = useRef(null);
+  const copySignalTimerRef = useRef(null);
   const fetchingRef = useRef(false);
 
   // ── Fetch files from MongoDB ─────────────────────────────────────────────
@@ -318,6 +320,15 @@ export default function EditorPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleRun, handleSave]);
 
+  // ── Handle Copy ───────────────────────────────────────────────────────────
+  const handleCopy = useCallback((isWholeCode) => {
+    setCopySignal(isWholeCode ? "Whole code copied!" : "Selected text copied!");
+    if (copySignalTimerRef.current) clearTimeout(copySignalTimerRef.current);
+    copySignalTimerRef.current = setTimeout(() => {
+      setCopySignal(null);
+    }, 2500);
+  }, []);
+
   // ── Horizontal resize (editor ↔ sidebar) ───────────────────
   const startHResize = useCallback((e) => {
     e.preventDefault();
@@ -395,6 +406,7 @@ export default function EditorPage() {
         onSave={handleSave}
         userEmail={userEmail}
         onLogout={handleLogout}
+        copySignal={copySignal}
       />
 
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
@@ -424,6 +436,7 @@ export default function EditorPage() {
                 theme={theme}
                 fileName={currentFileName || null}
                 onRename={handleRenameFile}
+                onCopy={handleCopy}
               />
             ) : (
               <div className="panel editor-panel fade-in editor-empty-panel">

@@ -20,6 +20,7 @@ export default function TopBar({
   onSave,
   userEmail,
   onLogout,
+  copySignal,
 }) {
   return (
     <header className="topbar" role="banner">
@@ -37,6 +38,17 @@ export default function TopBar({
       <span className="topbar-brand">
         Sumora<span> Code</span>
       </span>
+
+      {/* Copy signal container (zero width so it doesn't push the Save button) */}
+      <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+        <div style={{ position: "absolute", right: "0", marginRight: "12px", whiteSpace: "nowrap", pointerEvents: "none" }}>
+          {copySignal && (
+            <span className="copy-signal fade-in" style={{ fontSize: "13px", color: "#4ade80", fontWeight: "600" }}>
+              {copySignal}
+            </span>
+          )}
+        </div>
+      </div>
 
       {/* Save button */}
       <button

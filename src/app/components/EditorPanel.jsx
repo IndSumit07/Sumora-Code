@@ -203,7 +203,7 @@ function FilenameLabel({ fileName, onRename }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function EditorPanel({ language, monacoLang, value, onChange, theme, fileName, onRename }) {
+export default function EditorPanel({ language, monacoLang, value, onChange, theme, fileName, onRename, onCopy }) {
   const monacoRef = useRef(null);
   const editorRef = useRef(null);
 
@@ -223,9 +223,35 @@ export default function EditorPanel({ language, monacoLang, value, onChange, the
       defineThemes(monaco);
       monaco.editor.setTheme(monacoTheme);
 
+      // Custom copy behavior
+      editor.onKeyDown(async (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.keyCode === monaco.KeyCode.KeyC) {
+          const selection = editor.getSelection();
+          if (selection && selection.isEmpty()) {
+            e.preventDefault();
+            const fullText = editor.getValue();
+            try {
+              await navigator.clipboard.writeText(fullText);
+              if (onCopy) onCopy(true);
+            } catch (err) {
+              console.error("Failed to copy full text:", err);
+            }
+          } else if (selection) {
+            e.preventDefault();
+            const selectedText = editor.getModel().getValueInRange(selection);
+            try {
+              await navigator.clipboard.writeText(selectedText);
+              if (onCopy) onCopy(false);
+            } catch (err) {
+              console.error("Failed to copy selected text:", err);
+            }
+          }
+        }
+      });
+
       editor.focus();
     },
-    [monacoTheme]
+    [monacoTheme, onCopy]
   );
 
   const options = {
