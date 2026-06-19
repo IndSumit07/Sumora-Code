@@ -133,6 +133,111 @@ function defineThemes(monaco) {
   monaco.editor.defineTheme("cp-light", LIGHT_THEME);
 }
 
+let snippetsDefined = false;
+
+function defineSnippets(monaco) {
+  if (snippetsDefined) return;
+  snippetsDefined = true;
+
+  // Java Snippets
+  monaco.languages.registerCompletionItemProvider("java", {
+    provideCompletionItems: (model, position) => {
+      const word = model.getWordUntilPosition(position);
+      const range = {
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: word.startColumn,
+        endColumn: word.endColumn,
+      };
+
+      const suggestions = [
+        {
+          label: "sout",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "System.out.println($1);",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Print to standard output",
+          range: range,
+        },
+        {
+          label: "psvm",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "public static void main(String[] args) {\n\t$1\n}",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Main method",
+          range: range,
+        },
+        {
+          label: "fori",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "for (int i = 0; i < $1; i++) {\n\t$2\n}",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "For loop (i)",
+          range: range,
+        },
+        {
+          label: "forj",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "for (int j = 0; j < $1; j++) {\n\t$2\n}",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "For loop (j)",
+          range: range,
+        }
+      ];
+      return { suggestions };
+    },
+  });
+
+  // C++ Snippets
+  monaco.languages.registerCompletionItemProvider("cpp", {
+    provideCompletionItems: (model, position) => {
+      const word = model.getWordUntilPosition(position);
+      const range = {
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: word.startColumn,
+        endColumn: word.endColumn,
+      };
+
+      const suggestions = [
+        {
+          label: "cout",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "cout << $1 << \"\\\\n\";",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Print to standard output",
+          range: range,
+        },
+        {
+          label: "cin",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "cin >> $1;",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Read from standard input",
+          range: range,
+        },
+        {
+          label: "fori",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "for (int i = 0; i < $1; i++) {\n\t$2\n}",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "For loop (i)",
+          range: range,
+        },
+        {
+          label: "forj",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "for (int j = 0; j < $1; j++) {\n\t$2\n}",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "For loop (j)",
+          range: range,
+        }
+      ];
+      return { suggestions };
+    },
+  });
+}
+
 // ── Inline filename edit ────────────────────────────────────────────────────
 
 function FilenameLabel({ fileName, onRename }) {
@@ -221,6 +326,7 @@ export default function EditorPanel({ language, monacoLang, value, onChange, the
       monacoRef.current = monaco;
 
       defineThemes(monaco);
+      defineSnippets(monaco);
       monaco.editor.setTheme(monacoTheme);
 
       // Custom copy behavior
