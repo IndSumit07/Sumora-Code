@@ -36,10 +36,14 @@ export default function EditorPage() {
   const [theme, setTheme] = useState("dark");
   const [language, setLanguage] = useState(defaultLang);
   const [code, setCode] = useState("");
+  const [originalCode, setOriginalCode] = useState("");
   const [input, setInput] = useState("");
+  const [originalInput, setOriginalInput] = useState("");
   const [output, setOutput] = useState(null);
   const [isError, setIsError] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+
+  const isDirty = code !== originalCode || input !== originalInput;
 
   // ── Sidebar + MongoDB state ──────────────────────────────────────────────
   const [files, setFiles] = useState([]);
@@ -49,6 +53,7 @@ export default function EditorPage() {
   const [saveStatus, setSaveStatus] = useState("idle");
   const [saveStatusVisible, setSaveStatusVisible] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
   const [copySignal, setCopySignal] = useState(null);
 
   // ── Resize state ─────────────────────────────────────────────────────────
@@ -136,11 +141,31 @@ export default function EditorPage() {
     });
   }, []);
 
+  // ── Unsaved changes prompt (Browser refresh/close) ───────────────────────
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "You have unsaved changes. Are you sure you want to leave?";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
   // ── Logout ────────────────────────────────────────────────────────────────
   const handleLogout = useCallback(async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     router.replace("/login");
   }, [router]);
+
+  const handleLogoutClick = useCallback(() => {
+    if (isDirty) {
+      setLogoutConfirmVisible(true);
+    } else {
+      handleLogout();
+    }
+  }, [isDirty, handleLogout]);
 
   // ── Sidebar handlers ─────────────────────────────────────────────────────
   const handleSelectFile = useCallback(async (file) => {
@@ -151,8 +176,12 @@ export default function EditorPage() {
       setCurrentFileId(data._id);
       setCurrentFileName(data.question);
       setLanguage(data.language || defaultLang);
-      setCode(data.code ?? LANGUAGES[data.language || defaultLang].snippet);
-      setInput(data.input || "");
+      const fetchedCode = data.code ?? LANGUAGES[data.language || defaultLang].snippet;
+      setCode(fetchedCode);
+      setOriginalCode(fetchedCode);
+      const fetchedInput = data.input || "";
+      setInput(fetchedInput);
+      setOriginalInput(fetchedInput);
     } catch {
       // silently fail — editor state unchanged
     }
@@ -171,7 +200,9 @@ export default function EditorPage() {
       setCurrentFileId(newFile._id);
       setCurrentFileName(newFile.question);
       setCode(snippet);
+      setOriginalCode(snippet);
       setInput("");
+      setOriginalInput("");
       await fetchFiles();
     } catch {
       // silently fail
@@ -240,6 +271,8 @@ export default function EditorPage() {
         setCurrentFileId(newFile._id);
         setCurrentFileName(newFile.question);
         setSaveStatus("saved");
+        setOriginalCode(code || snippet);
+        setOriginalInput(input);
         await fetchFiles();
       } catch {
         setSaveStatus("error");
@@ -258,6 +291,8 @@ export default function EditorPage() {
       });
       if (!res.ok) throw new Error("Save failed");
       setSaveStatus("saved");
+      setOriginalCode(code);
+      setOriginalInput(input);
       setFiles((prev) =>
         prev.map((f) =>
           f._id === currentFileId
@@ -405,7 +440,7 @@ export default function EditorPage() {
         saveStatusVisible={saveStatusVisible}
         onSave={handleSave}
         userEmail={userEmail}
-        onLogout={handleLogout}
+        onLogout={handleLogoutClick}
         copySignal={copySignal}
       />
 
@@ -497,6 +532,54 @@ export default function EditorPage() {
                 onClick={handleConfirmDelete}
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {logoutConfirmVisible && (
+        <div
+          className="confirm-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setLogoutConfirmVisible(false);
+          }}
+        >
+          <div className="confirm-dialog">
+            <div className="confirm-dialog-title">Unsaved Changes</div>
+            <div className="confirm-dialog-subtitle">
+              You have unsaved changes. Do you want to save before logging out?
+            </div>
+            <div className="confirm-dialog-actions" style={{ flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", gap: "8px", width: "100%" }}>
+                <button
+                  className="confirm-dialog-btn confirm-dialog-btn-cancel"
+                  style={{ flex: 1 }}
+                  onClick={() => setLogoutConfirmVisible(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="confirm-dialog-btn confirm-dialog-btn-danger"
+                  style={{ flex: 1 }}
+                  onClick={() => {
+                    setLogoutConfirmVisible(false);
+                    handleLogout();
+                  }}
+                >
+                  Logout without saving
+                </button>
+              </div>
+              <button
+                className="confirm-dialog-btn"
+                style={{ background: "var(--accent-primary)", color: "white", width: "100%" }}
+                onClick={async () => {
+                  await handleSave();
+                  setLogoutConfirmVisible(false);
+                  handleLogout();
+                }}
+              >
+                Save & Logout
               </button>
             </div>
           </div>
