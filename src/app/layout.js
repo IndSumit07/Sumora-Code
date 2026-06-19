@@ -21,9 +21,12 @@ const editorFont = JetBrains_Mono({
 });
 
 export const metadata = {
-  title: "Sumora Code — Java & C++ Online Compiler",
+  title: "Sumora Code - Java & C++ Online Compiler",
   description:
     "A distraction-free online code editor and compiler for Java and C++. Write, run, and test code instantly in your browser.",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({ children }) {
