@@ -210,18 +210,20 @@ export default function EditorPage() {
   }, [language, fetchFiles]);
 
   const handleRenameFile = useCallback(
-    async (newName) => {
-      if (!currentFileId) return;
-      setCurrentFileName(newName);
+    async (id, newName) => {
+      if (!id) return;
+      if (id === currentFileId) {
+        setCurrentFileName(newName);
+      }
       try {
-        await fetch(`/api/codes/${currentFileId}`, {
+        await fetch(`/api/codes/${id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ question: newName }),
         });
         setFiles((prev) =>
           prev.map((f) =>
-            f._id === currentFileId ? { ...f, question: newName } : f
+            f._id === id ? { ...f, question: newName } : f
           )
         );
       } catch {
@@ -452,6 +454,7 @@ export default function EditorPage() {
           onSelectFile={handleSelectFile}
           onNewFile={handleNewFile}
           onDeleteFile={handleDeleteFile}
+          onRenameFile={handleRenameFile}
         />
 
         <main className="editor-area" ref={editorAreaRef} role="main">
@@ -470,7 +473,7 @@ export default function EditorPage() {
                 onChange={(val) => setCode(val ?? "")}
                 theme={theme}
                 fileName={currentFileName || null}
-                onRename={handleRenameFile}
+                onRename={(newName) => handleRenameFile(currentFileId, newName)}
                 onCopy={handleCopy}
               />
             ) : (
