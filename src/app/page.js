@@ -167,93 +167,6 @@ export default function EditorPage() {
     }
   }, [isDirty, handleLogout]);
 
-  // ── Sidebar handlers ─────────────────────────────────────────────────────
-  const handleSelectFile = useCallback(async (file) => {
-    try {
-      const res = await fetch(`/api/codes/${file._id}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      setCurrentFileId(data._id);
-      setCurrentFileName(data.question);
-      setLanguage(data.language || defaultLang);
-      const fetchedCode = data.code ?? LANGUAGES[data.language || defaultLang].snippet;
-      setCode(fetchedCode);
-      setOriginalCode(fetchedCode);
-      const fetchedInput = data.input || "";
-      setInput(fetchedInput);
-      setOriginalInput(fetchedInput);
-    } catch {
-      // silently fail — editor state unchanged
-    }
-  }, []);
-
-  const handleNewFile = useCallback(async () => {
-    const snippet = LANGUAGES[language]?.snippet ?? LANGUAGES[defaultLang].snippet;
-    try {
-      const res = await fetch("/api/codes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: "Untitled", language, code: snippet, input: "" }),
-      });
-      if (!res.ok) return;
-      const newFile = await res.json();
-      setCurrentFileId(newFile._id);
-      setCurrentFileName(newFile.question);
-      setCode(snippet);
-      setOriginalCode(snippet);
-      setInput("");
-      setOriginalInput("");
-      await fetchFiles();
-    } catch {
-      // silently fail
-    }
-  }, [language, fetchFiles]);
-
-  const handleRenameFile = useCallback(
-    async (id, newName) => {
-      if (!id) return;
-      if (id === currentFileId) {
-        setCurrentFileName(newName);
-      }
-      try {
-        await fetch(`/api/codes/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: newName }),
-        });
-        setFiles((prev) =>
-          prev.map((f) =>
-            f._id === id ? { ...f, question: newName } : f
-          )
-        );
-      } catch {
-        // silently fail
-      }
-    },
-    [currentFileId]
-  );
-
-  const handleDeleteFile = useCallback(async (id) => {
-    setDeleteConfirmId(id);
-  }, []);
-
-  const handleConfirmDelete = useCallback(async () => {
-    const id = deleteConfirmId;
-    setDeleteConfirmId(null);
-    if (!id) return;
-    try {
-      const res = await fetch(`/api/codes/${id}`, { method: "DELETE" });
-      if (!res.ok) return;
-      if (currentFileId === id) {
-        setCurrentFileId(null);
-        setCurrentFileName("");
-      }
-      setFiles((prev) => prev.filter((f) => f._id !== id));
-    } catch {
-      // silently fail
-    }
-  }, [deleteConfirmId, currentFileId]);
-
   // ── Save to MongoDB (Ctrl+S) ─────────────────────────────────────────────
   const handleSave = useCallback(async () => {
     if (saveStatus === "saving") return;
@@ -306,6 +219,97 @@ export default function EditorPage() {
       setSaveStatus("error");
     }
   }, [currentFileId, language, code, input, saveStatus, fetchFiles]);
+
+  // ── Sidebar handlers ─────────────────────────────────────────────────────
+  const handleSelectFile = useCallback(async (file) => {
+    try {
+      const res = await fetch(`/api/codes/${file._id}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setCurrentFileId(data._id);
+      setCurrentFileName(data.question);
+      setLanguage(data.language || defaultLang);
+      const fetchedCode = data.code ?? LANGUAGES[data.language || defaultLang].snippet;
+      setCode(fetchedCode);
+      setOriginalCode(fetchedCode);
+      const fetchedInput = data.input || "";
+      setInput(fetchedInput);
+      setOriginalInput(fetchedInput);
+    } catch {
+      // silently fail — editor state unchanged
+    }
+  }, []);
+
+  const handleNewFile = useCallback(async () => {
+    if (isDirty) {
+      await handleSave();
+    }
+    const snippet = LANGUAGES[language]?.snippet ?? LANGUAGES[defaultLang].snippet;
+    try {
+      const res = await fetch("/api/codes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: "Untitled", language, code: snippet, input: "" }),
+      });
+      if (!res.ok) return;
+      const newFile = await res.json();
+      setCurrentFileId(newFile._id);
+      setCurrentFileName(newFile.question);
+      setCode(snippet);
+      setOriginalCode(snippet);
+      setInput("");
+      setOriginalInput("");
+      await fetchFiles();
+    } catch {
+      // silently fail
+    }
+  }, [language, fetchFiles, isDirty, handleSave]);
+
+  const handleRenameFile = useCallback(
+    async (id, newName) => {
+      if (!id) return;
+      if (id === currentFileId) {
+        setCurrentFileName(newName);
+      }
+      try {
+        await fetch(`/api/codes/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: newName }),
+        });
+        setFiles((prev) =>
+          prev.map((f) =>
+            f._id === id ? { ...f, question: newName } : f
+          )
+        );
+      } catch {
+        // silently fail
+      }
+    },
+    [currentFileId]
+  );
+
+  const handleDeleteFile = useCallback(async (id) => {
+    setDeleteConfirmId(id);
+  }, []);
+
+  const handleConfirmDelete = useCallback(async () => {
+    const id = deleteConfirmId;
+    setDeleteConfirmId(null);
+    if (!id) return;
+    try {
+      const res = await fetch(`/api/codes/${id}`, { method: "DELETE" });
+      if (!res.ok) return;
+      if (currentFileId === id) {
+        setCurrentFileId(null);
+        setCurrentFileName("");
+      }
+      setFiles((prev) => prev.filter((f) => f._id !== id));
+    } catch {
+      // silently fail
+    }
+  }, [deleteConfirmId, currentFileId]);
+
 
   // ── Code execution ────────────────────────────────────────────────────────
   const handleRun = useCallback(async () => {
