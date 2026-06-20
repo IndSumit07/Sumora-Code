@@ -55,6 +55,8 @@ export default function EditorPage() {
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
   const [copySignal, setCopySignal] = useState(null);
+  const [newFilePopupVisible, setNewFilePopupVisible] = useState(false);
+  const [newFileName, setNewFileName] = useState("");
 
   // ── Resize state ─────────────────────────────────────────────────────────
   const [editorWidthPx, setEditorWidthPx] = useState(null);
@@ -240,16 +242,17 @@ export default function EditorPage() {
     }
   }, []);
 
-  const handleNewFile = useCallback(async () => {
+  const handleNewFile = useCallback(async (questionName) => {
     if (isDirty) {
       await handleSave();
     }
     const snippet = LANGUAGES[language]?.snippet ?? LANGUAGES[defaultLang].snippet;
+    const name = (questionName || "").trim() || "Untitled";
     try {
       const res = await fetch("/api/codes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: "Untitled", language, code: snippet, input: "" }),
+        body: JSON.stringify({ question: name, language, code: snippet, input: "" }),
       });
       if (!res.ok) return;
       const newFile = await res.json();
@@ -342,19 +345,67 @@ export default function EditorPage() {
 
   // ── Keyboard shortcuts ──────────────────────────────────────────────────
   useEffect(() => {
+    const STEP = 50;
     const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+      const mod = e.ctrlKey || e.metaKey;
+      if (!mod) return;
+
+      if (e.key === "s" && !e.altKey) {
         e.preventDefault();
         handleSave();
         return;
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      if (e.key === "'" && e.altKey) {
         e.preventDefault();
         handleRun();
+        return;
       }
-      if (e.ctrlKey && e.key === "'") {
+      if (e.key === "Enter" && e.altKey) {
         e.preventDefault();
-        handleRun();
+        setIsSidebarOpen((prev) => !prev);
+        return;
+      }
+      if (e.code === "Space" && e.altKey) {
+        e.preventDefault();
+        setNewFileName("");
+        setNewFilePopupVisible(true);
+        return;
+      }
+
+      // Ctrl+Alt+Arrow: adjust IO panel sizes
+      if (e.altKey && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
+        e.preventDefault();
+        if (e.key === "ArrowRight") {
+          setEditorWidthPx((prev) => {
+            const container = editorAreaRef.current;
+            if (!container) return prev;
+            const maxW = container.getBoundingClientRect().width - 20 - 10 - 180;
+            const current = prev ?? container.getBoundingClientRect().width * 0.65;
+            return Math.min(current + STEP, maxW);
+          });
+        } else if (e.key === "ArrowLeft") {
+          setEditorWidthPx((prev) => {
+            const container = editorAreaRef.current;
+            if (!container) return prev;
+            const current = prev ?? container.getBoundingClientRect().width * 0.65;
+            return Math.max(current - STEP, 180);
+          });
+        } else if (e.key === "ArrowUp") {
+          setInputHeightPx((prev) => {
+            const container = ioColRef.current;
+            if (!container) return prev;
+            const current = prev ?? container.getBoundingClientRect().height * 0.35;
+            return Math.max(current - STEP, 80);
+          });
+        } else if (e.key === "ArrowDown") {
+          setInputHeightPx((prev) => {
+            const container = ioColRef.current;
+            if (!container) return prev;
+            const maxH = container.getBoundingClientRect().height - 10 - 80;
+            const current = prev ?? container.getBoundingClientRect().height * 0.35;
+            return Math.min(current + STEP, maxH);
+          });
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -422,7 +473,46 @@ export default function EditorPage() {
 
   // ── Loading shell ────────────────────────────────────────────────────────
   if (!mounted) {
-    return <div className="app-shell" aria-hidden="true" />;
+    return (
+      <div className="app-loading-shell" aria-hidden="true">
+        {/* Topbar skeleton */}
+        <div className="app-loading-topbar">
+          <div className="skeleton" style={{ width: 36, height: 36, borderRadius: 8 }} />
+          <div className="skeleton" style={{ width: 100, height: 14, borderRadius: 4 }} />
+          <div style={{ flex: 1 }} />
+          <div className="skeleton" style={{ width: 70, height: 32, borderRadius: 8 }} />
+          <div className="skeleton skeleton-circle" style={{ width: 28, height: 28 }} />
+          <div className="skeleton" style={{ width: 100, height: 32, borderRadius: 8 }} />
+          <div className="skeleton" style={{ width: 70, height: 32, borderRadius: 8 }} />
+          <div className="skeleton skeleton-circle" style={{ width: 36, height: 36 }} />
+          <div className="skeleton skeleton-circle" style={{ width: 36, height: 36 }} />
+        </div>
+        <div className="app-loading-body">
+          {/* Sidebar skeleton */}
+          <div className="app-loading-sidebar">
+            <div className="skeleton" style={{ width: 90, height: 12, borderRadius: 4, marginBottom: 12 }} />
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="skeleton" style={{ width: '100%', height: 36, borderRadius: 8, marginBottom: 4 }} />
+            ))}
+          </div>
+          {/* Editor skeleton */}
+          <div className="app-loading-editor">
+            <div className="skeleton" style={{ width: 140, height: 12, borderRadius: 4, marginBottom: 16 }} />
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="skeleton skeleton-line" style={{ width: `${[72, 88, 65, 90, 55][i - 1]}%`, height: 14 }} />
+            ))}
+          </div>
+          {/* IO skeleton */}
+          <div className="app-loading-io">
+            <div className="skeleton" style={{ width: 60, height: 12, borderRadius: 4, marginBottom: 12 }} />
+            <div className="skeleton" style={{ width: '100%', height: 80, borderRadius: 8 }} />
+            <div style={{ height: 16 }} />
+            <div className="skeleton" style={{ width: 50, height: 12, borderRadius: 4, marginBottom: 12 }} />
+            <div className="skeleton" style={{ width: '100%', height: 100, borderRadius: 8 }} />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const hasActiveFile = currentFileId !== null;
@@ -456,7 +546,10 @@ export default function EditorPage() {
           files={files}
           currentFileId={currentFileId}
           onSelectFile={handleSelectFile}
-          onNewFile={handleNewFile}
+          onNewFile={() => {
+            setNewFileName("");
+            setNewFilePopupVisible(true);
+          }}
           onDeleteFile={handleDeleteFile}
           onRenameFile={handleRenameFile}
         />
@@ -520,6 +613,26 @@ export default function EditorPage() {
           }}
         >
           <div className="confirm-dialog">
+            <div style={{ marginBottom: "12px" }}>
+              <div style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                background: "var(--accent-red-dim)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 12px",
+              }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-red)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18"/>
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                  <line x1="10" y1="11" x2="10" y2="17"/>
+                  <line x1="14" y1="11" x2="14" y2="17"/>
+                </svg>
+              </div>
+            </div>
             <div className="confirm-dialog-title">Delete file?</div>
             <div className="confirm-dialog-name">
               {files.find((f) => f._id === deleteConfirmId)?.question ?? "this file"}
@@ -553,6 +666,24 @@ export default function EditorPage() {
           }}
         >
           <div className="confirm-dialog">
+            <div style={{ marginBottom: "12px" }}>
+              <div style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                background: "rgba(251, 146, 60, 0.12)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 12px",
+              }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-orange)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+              </div>
+            </div>
             <div className="confirm-dialog-title">Unsaved Changes</div>
             <div className="confirm-dialog-subtitle">
               You have unsaved changes. Do you want to save before logging out?
@@ -578,8 +709,8 @@ export default function EditorPage() {
                 </button>
               </div>
               <button
-                className="confirm-dialog-btn"
-                style={{ background: "var(--accent-primary)", color: "white", width: "100%" }}
+                className="confirm-dialog-btn confirm-dialog-btn-primary"
+                style={{ width: "100%" }}
                 onClick={async () => {
                   await handleSave();
                   setLogoutConfirmVisible(false);
@@ -589,6 +720,75 @@ export default function EditorPage() {
                 Save & Logout
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {newFilePopupVisible && (
+        <div
+          className="confirm-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setNewFilePopupVisible(false);
+          }}
+        >
+          <div className="confirm-dialog">
+            <div style={{ marginBottom: "12px" }}>
+              <div style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                background: "rgba(96, 165, 250, 0.12)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 12px",
+              }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="12" y1="18" x2="12" y2="12"/>
+                  <line x1="9" y1="15" x2="15" y2="15"/>
+                </svg>
+              </div>
+            </div>
+            <div className="confirm-dialog-title">New File</div>
+            <div className="confirm-dialog-subtitle">
+              Enter a question name for your new file.
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setNewFilePopupVisible(false);
+                handleNewFile(newFileName);
+              }}
+              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+            >
+              <input
+                autoFocus
+                className="save-dialog-input"
+                placeholder="e.g. Two Sum, Merge Sort..."
+                value={newFileName}
+                onChange={(e) => setNewFileName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") setNewFilePopupVisible(false);
+                }}
+              />
+              <div className="confirm-dialog-actions">
+                <button
+                  type="button"
+                  className="confirm-dialog-btn confirm-dialog-btn-cancel"
+                  onClick={() => setNewFilePopupVisible(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="confirm-dialog-btn confirm-dialog-btn-primary"
+                >
+                  Create File
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

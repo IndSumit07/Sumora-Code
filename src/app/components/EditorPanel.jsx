@@ -12,14 +12,23 @@ const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
       style={{
         height: "100%",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
+        gap: 16,
         color: "var(--text-muted)",
         fontSize: "13px",
         fontFamily: "inherit",
+        animation: "fadeIn 300ms ease both",
       }}
     >
-      Loading editor…
+      <div className="spinner-lg" />
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+        <span style={{ fontWeight: 600 }}>Loading editor</span>
+        <div className="loading-dots">
+          <span /><span /><span />
+        </div>
+      </div>
     </div>
   ),
 });
@@ -366,42 +375,71 @@ export default function EditorPanel({ language, monacoLang, value, onChange, the
     fontFamily:
       "var(--font-editor), 'JetBrains Mono', 'Fira Code', ui-monospace, monospace",
     fontLigatures: true,
+    fontVariants: "common-ligatures",
     minimap: { enabled: false },
     wordWrap: "on",
     lineNumbers: "on",
+    renderWhitespace: "none",
     scrollBeyondLastLine: false,
     smoothScrolling: true,
     cursorBlinking: "smooth",
     cursorSmoothCaretAnimation: "on",
+    cursorInvertSelection: false,
+    mouseWheelZoom: true,
     padding: { top: 14, bottom: 14 },
-    renderLineHighlight: "line",
-    bracketPairColorization: { enabled: true },
-    guides: { bracketPairs: true, indentation: true },
-    suggest: { showKeywords: true },
+    renderLineHighlight: "all",
+    renderLineHighlightOnlyWhenFocus: false,
+    bracketPairColorization: { enabled: true, independentColorPoolPerBracketType: true },
+    guides: { bracketPairs: true, indentation: true, highlightActiveBracketPair: true },
+    suggest: { showKeywords: true, showSnippets: true },
     tabSize: 4,
     insertSpaces: true,
+    detectIndentation: true,
     automaticLayout: true,
+    fastScrollSensitivity: 8,
     scrollbar: {
       vertical: "auto",
       horizontal: "auto",
       verticalScrollbarSize: 6,
       horizontalScrollbarSize: 6,
+      useShadows: false,
     },
+    overviewRulerLanes: 0,
+    hideCursorInOverviewRuler: true,
+    overviewRulerBorder: false,
+    roundedSelection: true,
+    folding: true,
+    showFoldingControls: "mouseover",
+    matchBrackets: "always",
+    occurrencesHighlight: "singleFile",
+    selectionHighlight: true,
+    colorDecorators: true,
+    contextmenu: true,
+    copyWithSyntaxHighlighting: true,
+    multiCursorModifier: "ctrlCmd",
+    formatOnPaste: true,
+    formatOnType: false,
+    links: true,
+    wordBasedSuggestions: "off",
+    suggestOnTriggerCharacters: true,
+    acceptSuggestionOnCommitCharacter: true,
   };
 
   return (
     <div className="panel editor-panel fade-in" style={{ flex: 1 }}>
       {fileName && <FilenameLabel fileName={fileName} onRename={onRename} />}
-      <MonacoEditor
-        height="100%"
-        language={monacoLang}
-        value={value}
-        onChange={onChange}
-        onMount={handleMount}
-        theme={monacoTheme}
-        options={options}
-        loading={null}
-      />
+      <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
+        <MonacoEditor
+          height="100%"
+          language={monacoLang}
+          value={value}
+          onChange={onChange}
+          onMount={handleMount}
+          theme={monacoTheme}
+          options={options}
+          loading={null}
+        />
+      </div>
     </div>
   );
 }

@@ -10,6 +10,7 @@ function SidebarItem({
   onDeleteFile,
   onRenameFile,
   formatDate,
+  index,
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(file.question);
@@ -39,10 +40,12 @@ function SidebarItem({
     setEditing(false);
   };
 
+  const isActive = file._id === currentFileId;
+
   if (editing) {
     return (
       <div
-        className={`sidebar-item${file._id === currentFileId ? " active" : ""}`}
+        className={`sidebar-item${isActive ? " active" : ""}`}
         onClick={() => onSelectFile(file)}
       >
         <FileText size={14} style={{ flexShrink: 0, opacity: 0.6 }} />
@@ -70,17 +73,19 @@ function SidebarItem({
               background: "var(--bg-input)",
               color: "var(--text-primary)",
               border: "1px solid var(--border-subtle)",
-              borderRadius: "3px",
-              padding: "2px 4px",
+              borderRadius: "4px",
+              padding: "2px 6px",
               fontSize: "inherit",
               fontFamily: "inherit",
               outline: "none",
+              transition: "border-color 150ms ease",
             }}
           />
           <button
             type="submit"
             onClick={(e) => e.stopPropagation()}
             className="sidebar-item-delete"
+            style={{ opacity: 1, color: "var(--accent-green)" }}
             aria-label="Confirm rename"
           >
             <Check size={12} />
@@ -92,6 +97,7 @@ function SidebarItem({
               cancel();
             }}
             className="sidebar-item-delete"
+            style={{ opacity: 1 }}
             aria-label="Cancel rename"
           >
             <X size={12} />
@@ -103,9 +109,10 @@ function SidebarItem({
 
   return (
     <div
-      className={`sidebar-item${file._id === currentFileId ? " active" : ""}`}
+      className={`sidebar-item${isActive ? " active" : ""}`}
       onClick={() => onSelectFile(file)}
       title={file.question}
+      style={{ animationDelay: `${index * 30}ms` }}
     >
       <FileText size={14} style={{ flexShrink: 0, opacity: 0.6 }} />
       <span className="sidebar-item-name">{file.question}</span>
@@ -182,11 +189,23 @@ export default function Sidebar({
       <div className="sidebar-list">
         {files.length === 0 ? (
           <div className="sidebar-empty">
-            <FileText size={20} style={{ opacity: 0.4 }} />
-            <span>No saved files yet</span>
+            <div style={{
+              width: 48,
+              height: 48,
+              borderRadius: 12,
+              border: "2px dashed var(--border-subtle)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 4,
+            }}>
+              <FileText size={20} style={{ opacity: 0.3 }} />
+            </div>
+            <span style={{ fontWeight: 600, fontSize: 13 }}>No saved files yet</span>
+            <span style={{ fontSize: 11, opacity: 0.7 }}>Click + to create one</span>
           </div>
         ) : (
-          files.map((file) => (
+          files.map((file, index) => (
             <SidebarItem
               key={file._id}
               file={file}
@@ -195,6 +214,7 @@ export default function Sidebar({
               onDeleteFile={onDeleteFile}
               onRenameFile={onRenameFile}
               formatDate={formatDate}
+              index={index}
             />
           ))
         )}

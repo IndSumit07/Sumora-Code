@@ -43,7 +43,10 @@ export default function TopBar({
       <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
         <div style={{ position: "absolute", right: "0", marginRight: "12px", whiteSpace: "nowrap", pointerEvents: "none" }}>
           {copySignal && (
-            <span className="copy-signal fade-in" style={{ fontSize: "13px", color: "#4ade80", fontWeight: "600" }}>
+            <span className="copy-signal">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
               {copySignal}
             </span>
           )}
@@ -85,8 +88,8 @@ export default function TopBar({
         className="run-btn"
         onClick={onRun}
         disabled={isRunning}
-        aria-label={isRunning ? "Running..." : "Run code (Ctrl+Enter)"}
-        title="Run (Ctrl+Enter)"
+        aria-label={isRunning ? "Running..." : "Run code (Ctrl+Alt+')"}
+        title="Run (Ctrl+Alt+')"
       >
         {isRunning ? (
           <>

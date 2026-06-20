@@ -53,7 +53,17 @@ export default function LoginPage() {
   };
 
   if (checking) {
-    return <div className="login-page" />;
+    return (
+      <div className="login-loading">
+        <div className="skeleton login-loading-brand" />
+        <div className="skeleton login-loading-sub" />
+        <div style={{ height: 24 }} />
+        <div className="skeleton" style={{ width: "100%", maxWidth: 328, height: 44, borderRadius: 10 }} />
+        <div className="skeleton" style={{ width: "100%", maxWidth: 328, height: 44, borderRadius: 10 }} />
+        <div style={{ height: 8 }} />
+        <div className="skeleton" style={{ width: "100%", maxWidth: 328, height: 44, borderRadius: 10 }} />
+      </div>
+    );
   }
 
   return (
@@ -84,7 +94,14 @@ export default function LoginPage() {
           {error && <div className="login-error">{error}</div>}
 
           <button type="submit" className="login-btn" disabled={loading}>
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? (
+              <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <span className="spinner" />
+                Signing in...
+              </span>
+            ) : (
+              "Sign In"
+            )}
           </button>
         </form>
       </div>
