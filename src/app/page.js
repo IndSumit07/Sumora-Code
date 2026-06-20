@@ -355,7 +355,7 @@ export default function EditorPage() {
         handleSave();
         return;
       }
-      if (e.key === "'" && e.altKey) {
+      if (e.key === "'") {
         e.preventDefault();
         handleRun();
         return;

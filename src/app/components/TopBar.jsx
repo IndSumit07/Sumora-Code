@@ -88,8 +88,8 @@ export default function TopBar({
         className="run-btn"
         onClick={onRun}
         disabled={isRunning}
-        aria-label={isRunning ? "Running..." : "Run code (Ctrl+Alt+')"}
-        title="Run (Ctrl+Alt+')"
+        aria-label={isRunning ? "Running..." : "Run code (Ctrl+')"}
+        title="Run (Ctrl+')"
       >
         {isRunning ? (
           <>
