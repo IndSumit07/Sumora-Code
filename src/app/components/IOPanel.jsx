@@ -43,23 +43,22 @@ export default function IOPanel({
   return (
     <div
       ref={containerRef}
-      style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}
+      className="flex flex-col h-full min-h-0"
     >
       {/* stdin */}
       <div
-        className="panel input-panel fade-in"
-        style={{
-          flex: inputHeightPx ? `0 0 ${inputHeightPx}px` : "0 0 35%",
-          minHeight: 0,
-        }}
+        className="flex flex-col min-h-0 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] overflow-hidden shadow-[var(--shadow-panel)]"
+        style={{ flex: inputHeightPx ? `0 0 ${inputHeightPx}px` : "0 0 35%", minHeight: 0 }}
       >
-        <div className="panel-label">
-          <span className="panel-label-dot" style={{ background: "var(--accent-blue)" }} />
-          stdin · input
+        <div className="flex items-center gap-1.5 px-3.5 py-2 border-b border-[var(--border-subtle)] flex-shrink-0">
+          <span className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
+          <span className="text-[11px] font-semibold tracking-widest uppercase text-[var(--text-muted)]">
+            stdin · input
+          </span>
         </div>
         <textarea
           id="stdin-input"
-          className="io-textarea"
+          className="flex-1 w-full resize-none bg-transparent text-[var(--text-primary)] text-[13px] font-mono leading-6 px-3.5 py-3 outline-none placeholder:text-[var(--text-muted)] min-h-0"
           value={input}
           onChange={(e) => onInputChange(e.target.value)}
           placeholder="Provide program input here..."
@@ -71,41 +70,38 @@ export default function IOPanel({
 
       {/* Vertical resize handle */}
       <div
-        className="resize-handle resize-handle-v"
+        className="h-2 cursor-row-resize flex items-center justify-center group flex-shrink-0"
         onMouseDown={onVResizeStart}
         title="Drag to resize"
         aria-hidden="true"
-      />
+      >
+        <div className="w-8 h-0.5 rounded-full bg-[var(--border-subtle)] group-hover:bg-[var(--text-muted)] transition-colors" />
+      </div>
 
       {/* stdout / stderr */}
-      <div className="panel output-panel fade-in" style={{ flex: 1, minHeight: 0 }}>
-        <div className="panel-label" style={{ justifyContent: "space-between" }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span className="panel-label-dot" style={{
-              background: hasOutput ? (isError ? "var(--accent-red)" : "var(--accent-green)") : "var(--text-muted)",
-            }} />
-            output
+      <div className="flex flex-col min-h-0 flex-1 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] overflow-hidden shadow-[var(--shadow-panel)]">
+        <div className="flex items-center justify-between px-3.5 py-2 border-b border-[var(--border-subtle)] flex-shrink-0">
+          <span className="flex items-center gap-1.5">
+            <span
+              className="w-2 h-2 rounded-full flex-shrink-0 transition-colors"
+              style={{
+                background: hasOutput
+                  ? isError ? "var(--accent-red)" : "var(--accent-green)"
+                  : "var(--text-muted)",
+              }}
+            />
+            <span className="text-[11px] font-semibold tracking-widest uppercase text-[var(--text-muted)]">output</span>
           </span>
           {hasOutput && (
             <button
               onClick={handleCopyOutput}
-              style={{
-                background: "none",
-                border: "none",
-                color: copied ? "var(--accent-green)" : "var(--text-muted)",
-                cursor: "pointer",
-                padding: "2px 6px",
-                borderRadius: 4,
-                fontSize: 11,
-                fontFamily: "inherit",
-                fontWeight: 600,
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                transition: "color 150ms ease",
-              }}
               title="Copy output"
               aria-label="Copy output to clipboard"
+              className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                copied
+                  ? "text-emerald-400"
+                  : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              }`}
             >
               {copied ? (
                 <>
@@ -126,34 +122,27 @@ export default function IOPanel({
             </button>
           )}
         </div>
+
         <div
           id="output-area"
           ref={outputRef}
-          className={`output-content ${
+          className={`flex-1 overflow-auto text-[13px] font-mono leading-6 px-3.5 py-3 whitespace-pre-wrap break-words min-h-0 ${
             !hasOutput
-              ? "output-placeholder"
+              ? "flex flex-col items-center justify-center text-[var(--text-muted)] opacity-50"
               : isError
-              ? "output-error"
-              : "output-success"
+              ? "text-red-400"
+              : "text-emerald-400"
           }`}
           role="region"
           aria-label="Program output"
           aria-live="polite"
         >
           {!hasOutput ? (
-            <div style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "100%",
-              gap: 8,
-              opacity: 0.5,
-            }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-muted)" }}>
+            <div className="flex flex-col items-center justify-center h-full gap-2 opacity-70">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="5 3 19 12 5 21 5 3"/>
               </svg>
-              <span>Run your code to see output here</span>
+              <span className="text-xs">Run your code to see output here</span>
             </div>
           ) : output}
         </div>

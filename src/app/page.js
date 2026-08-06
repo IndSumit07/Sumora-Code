@@ -57,6 +57,7 @@ export default function EditorPage() {
   const [copySignal, setCopySignal] = useState(null);
   const [newFilePopupVisible, setNewFilePopupVisible] = useState(false);
   const [newFileName, setNewFileName] = useState("");
+  const [newFileFolderId, setNewFileFolderId] = useState(null);
 
   // ── Resize state ─────────────────────────────────────────────────────────
   const [editorWidthPx, setEditorWidthPx] = useState(null);
@@ -242,7 +243,7 @@ export default function EditorPage() {
     }
   }, []);
 
-  const handleNewFile = useCallback(async (questionName) => {
+  const handleNewFile = useCallback(async (questionName, folderId) => {
     if (isDirty) {
       await handleSave();
     }
@@ -252,7 +253,7 @@ export default function EditorPage() {
       const res = await fetch("/api/codes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: name, language, code: snippet, input: "" }),
+        body: JSON.stringify({ question: name, language, code: snippet, input: "", folderId: folderId ?? null }),
       });
       if (!res.ok) return;
       const newFile = await res.json();
@@ -267,6 +268,13 @@ export default function EditorPage() {
       // silently fail
     }
   }, [language, fetchFiles, isDirty, handleSave]);
+
+  // Triggered by Sidebar's onNewFile (passes folderId)
+  const handleSidebarNewFile = useCallback((folderId) => {
+    setNewFileFolderId(folderId ?? null);
+    setNewFileName("");
+    setNewFilePopupVisible(true);
+  }, []);
 
   const handleRenameFile = useCallback(
     async (id, newName) => {
@@ -368,11 +376,11 @@ export default function EditorPage() {
       if (e.code === "Space" && e.altKey) {
         e.preventDefault();
         setNewFileName("");
+        setNewFileFolderId(null);
         setNewFilePopupVisible(true);
         return;
       }
 
-      // Ctrl+Alt+Arrow: adjust IO panel sizes
       if (e.altKey && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
         e.preventDefault();
         if (e.key === "ArrowRight") {
@@ -421,7 +429,7 @@ export default function EditorPage() {
     }, 2500);
   }, []);
 
-  // ── Horizontal resize (editor ↔ sidebar) ───────────────────
+  // ── Horizontal resize (editor ↔ io) ───────────────────────────────────────
   const startHResize = useCallback((e) => {
     e.preventDefault();
     setIsDraggingH(true);
@@ -474,41 +482,32 @@ export default function EditorPage() {
   // ── Loading shell ────────────────────────────────────────────────────────
   if (!mounted) {
     return (
-      <div className="app-loading-shell" aria-hidden="true">
+      <div className="flex flex-col h-screen bg-[var(--bg-base)] overflow-hidden" aria-hidden="true">
         {/* Topbar skeleton */}
-        <div className="app-loading-topbar">
-          <div className="skeleton" style={{ width: 36, height: 36, borderRadius: 8 }} />
-          <div className="skeleton" style={{ width: 100, height: 14, borderRadius: 4 }} />
-          <div style={{ flex: 1 }} />
-          <div className="skeleton" style={{ width: 70, height: 32, borderRadius: 8 }} />
-          <div className="skeleton skeleton-circle" style={{ width: 28, height: 28 }} />
-          <div className="skeleton" style={{ width: 100, height: 32, borderRadius: 8 }} />
-          <div className="skeleton" style={{ width: 70, height: 32, borderRadius: 8 }} />
-          <div className="skeleton skeleton-circle" style={{ width: 36, height: 36 }} />
-          <div className="skeleton skeleton-circle" style={{ width: 36, height: 36 }} />
+        <div className="flex items-center gap-3 h-12 px-3 border-b border-zinc-800 flex-shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-zinc-800 animate-pulse" />
+          <div className="w-24 h-4 rounded bg-zinc-800 animate-pulse" />
+          <div className="flex-1" />
+          <div className="w-16 h-8 rounded-lg bg-zinc-800 animate-pulse" />
+          <div className="w-24 h-8 rounded-lg bg-zinc-800 animate-pulse" />
+          <div className="w-16 h-8 rounded-lg bg-zinc-800 animate-pulse" />
+          <div className="w-8 h-8 rounded-full bg-zinc-800 animate-pulse" />
+          <div className="w-8 h-8 rounded-full bg-zinc-800 animate-pulse" />
         </div>
-        <div className="app-loading-body">
-          {/* Sidebar skeleton */}
-          <div className="app-loading-sidebar">
-            <div className="skeleton" style={{ width: 90, height: 12, borderRadius: 4, marginBottom: 12 }} />
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="skeleton" style={{ width: '100%', height: 36, borderRadius: 8, marginBottom: 4 }} />
+        {/* Body skeleton */}
+        <div className="flex flex-1 min-h-0">
+          <div className="w-52 border-r border-zinc-800 p-3 flex-shrink-0">
+            <div className="w-20 h-3 rounded bg-zinc-800 animate-pulse mb-3" />
+            {[1,2,3,4].map((i) => (
+              <div key={i} className="w-full h-9 rounded-lg bg-zinc-800 animate-pulse mb-2" />
             ))}
           </div>
-          {/* Editor skeleton */}
-          <div className="app-loading-editor">
-            <div className="skeleton" style={{ width: 140, height: 12, borderRadius: 4, marginBottom: 16 }} />
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="skeleton skeleton-line" style={{ width: `${[72, 88, 65, 90, 55][i - 1]}%`, height: 14 }} />
-            ))}
-          </div>
-          {/* IO skeleton */}
-          <div className="app-loading-io">
-            <div className="skeleton" style={{ width: 60, height: 12, borderRadius: 4, marginBottom: 12 }} />
-            <div className="skeleton" style={{ width: '100%', height: 80, borderRadius: 8 }} />
-            <div style={{ height: 16 }} />
-            <div className="skeleton" style={{ width: 50, height: 12, borderRadius: 4, marginBottom: 12 }} />
-            <div className="skeleton" style={{ width: '100%', height: 100, borderRadius: 8 }} />
+          <div className="flex-1 p-4 flex gap-2 min-w-0">
+            <div className="flex-[0_0_65%] rounded-xl bg-zinc-800/50 animate-pulse" />
+            <div className="flex-1 flex flex-col gap-2">
+              <div className="flex-[0_0_35%] rounded-xl bg-zinc-800/50 animate-pulse" />
+              <div className="flex-1 rounded-xl bg-zinc-800/50 animate-pulse" />
+            </div>
           </div>
         </div>
       </div>
@@ -517,12 +516,13 @@ export default function EditorPage() {
 
   const hasActiveFile = currentFileId !== null;
 
+  // Shared overlay classes
+  const overlayClass = "fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm";
+  const dialogClass = "bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-80 shadow-2xl";
+  const btnBase = "flex-1 h-9 rounded-lg text-xs font-semibold transition-all";
+
   return (
-    <div
-      className={`app-shell${isDraggingH ? " is-resizing" : ""}${
-        isDraggingV ? " is-resizing-v" : ""
-      }`}
-    >
+    <div className={`flex flex-col h-screen overflow-hidden bg-[var(--bg-base)] ${isDraggingH || isDraggingV ? "select-none cursor-col-resize" : ""}`}>
       <TopBar
         language={language}
         onLanguageChange={handleLanguageChange}
@@ -540,27 +540,22 @@ export default function EditorPage() {
         copySignal={copySignal}
       />
 
-      <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         <Sidebar
           isOpen={isSidebarOpen}
           files={files}
           currentFileId={currentFileId}
           onSelectFile={handleSelectFile}
-          onNewFile={() => {
-            setNewFileName("");
-            setNewFilePopupVisible(true);
-          }}
+          onNewFile={handleSidebarNewFile}
           onDeleteFile={handleDeleteFile}
           onRenameFile={handleRenameFile}
         />
 
-        <main className="editor-area" ref={editorAreaRef} role="main">
+        <main className="flex flex-1 min-h-0 min-w-0 gap-2 p-2" ref={editorAreaRef} role="main">
+          {/* Editor column */}
           <div
-            className="editor-col"
-            style={{
-              flex: editorWidthPx ? `0 0 ${editorWidthPx}px` : "0 0 65%",
-              minWidth: 0,
-            }}
+            className="flex min-h-0"
+            style={{ flex: editorWidthPx ? `0 0 ${editorWidthPx}px` : "0 0 65%", minWidth: 0 }}
           >
             {hasActiveFile ? (
               <EditorPanel
@@ -574,24 +569,26 @@ export default function EditorPage() {
                 onCopy={handleCopy}
               />
             ) : (
-              <div className="panel editor-panel fade-in editor-empty-panel">
-                <div className="editor-watermark" aria-hidden="true">
+              <div className="flex flex-1 items-center justify-center rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-panel)]">
+                <span className="text-[clamp(3rem,8vw,7rem)] font-black text-zinc-800 tracking-tight select-none">
                   SUMORA
-                </div>
+                </span>
               </div>
             )}
           </div>
 
+          {/* Horizontal resize handle */}
           <div
-            className={`resize-handle resize-handle-h${
-              isDraggingH ? " dragging" : ""
-            }`}
+            className={`w-1.5 cursor-col-resize flex items-center justify-center group flex-shrink-0 ${isDraggingH ? "opacity-100" : ""}`}
             onMouseDown={startHResize}
             title="Drag to resize editor"
             aria-hidden="true"
-          />
+          >
+            <div className="w-0.5 h-12 rounded-full bg-zinc-700 group-hover:bg-zinc-500 transition-colors" />
+          </div>
 
-          <div style={{ flex: 1, minWidth: 0 }}>
+          {/* IO column */}
+          <div className="flex flex-1 min-w-0 min-h-0">
             <IOPanel
               input={input}
               onInputChange={setInput}
@@ -605,52 +602,25 @@ export default function EditorPage() {
         </main>
       </div>
 
+      {/* ── Delete confirm dialog ── */}
       {deleteConfirmId && (
-        <div
-          className="confirm-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setDeleteConfirmId(null);
-          }}
-        >
-          <div className="confirm-dialog">
-            <div style={{ marginBottom: "12px" }}>
-              <div style={{
-                width: 44,
-                height: 44,
-                borderRadius: 12,
-                background: "var(--accent-red-dim)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto 12px",
-              }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-red)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 6h18"/>
-                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                  <line x1="10" y1="11" x2="10" y2="17"/>
-                  <line x1="14" y1="11" x2="14" y2="17"/>
-                </svg>
-              </div>
+        <div className={overlayClass} onClick={(e) => { if (e.target === e.currentTarget) setDeleteConfirmId(null); }}>
+          <div className={dialogClass}>
+            <div className="w-11 h-11 rounded-xl bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
+              </svg>
             </div>
-            <div className="confirm-dialog-title">Delete file?</div>
-            <div className="confirm-dialog-name">
+            <h3 className="text-sm font-bold text-zinc-100 text-center mb-1">Delete file?</h3>
+            <p className="text-xs text-zinc-400 text-center font-mono mb-1">
               {files.find((f) => f._id === deleteConfirmId)?.question ?? "this file"}
-            </div>
-            <div className="confirm-dialog-subtitle">
-              This action cannot be undone.
-            </div>
-            <div className="confirm-dialog-actions">
-              <button
-                className="confirm-dialog-btn confirm-dialog-btn-cancel"
-                onClick={() => setDeleteConfirmId(null)}
-              >
+            </p>
+            <p className="text-xs text-zinc-600 text-center mb-5">This action cannot be undone.</p>
+            <div className="flex gap-2">
+              <button className={`${btnBase} text-zinc-400 bg-zinc-800 hover:bg-zinc-700`} onClick={() => setDeleteConfirmId(null)}>
                 Cancel
               </button>
-              <button
-                className="confirm-dialog-btn confirm-dialog-btn-danger"
-                onClick={handleConfirmDelete}
-              >
+              <button className={`${btnBase} text-red-300 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30`} onClick={handleConfirmDelete}>
                 Delete
               </button>
             </div>
@@ -658,133 +628,69 @@ export default function EditorPage() {
         </div>
       )}
 
+      {/* ── Logout confirm dialog ── */}
       {logoutConfirmVisible && (
-        <div
-          className="confirm-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setLogoutConfirmVisible(false);
-          }}
-        >
-          <div className="confirm-dialog">
-            <div style={{ marginBottom: "12px" }}>
-              <div style={{
-                width: 44,
-                height: 44,
-                borderRadius: 12,
-                background: "rgba(251, 146, 60, 0.12)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto 12px",
-              }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-orange)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                  <polyline points="16 17 21 12 16 7"/>
-                  <line x1="21" y1="12" x2="9" y2="12"/>
-                </svg>
-              </div>
+        <div className={overlayClass} onClick={(e) => { if (e.target === e.currentTarget) setLogoutConfirmVisible(false); }}>
+          <div className={dialogClass}>
+            <div className="w-11 h-11 rounded-xl bg-orange-500/10 flex items-center justify-center mx-auto mb-4">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fb923c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
             </div>
-            <div className="confirm-dialog-title">Unsaved Changes</div>
-            <div className="confirm-dialog-subtitle">
-              You have unsaved changes. Do you want to save before logging out?
-            </div>
-            <div className="confirm-dialog-actions" style={{ flexDirection: "column", gap: "8px" }}>
-              <div style={{ display: "flex", gap: "8px", width: "100%" }}>
-                <button
-                  className="confirm-dialog-btn confirm-dialog-btn-cancel"
-                  style={{ flex: 1 }}
-                  onClick={() => setLogoutConfirmVisible(false)}
-                >
+            <h3 className="text-sm font-bold text-zinc-100 text-center mb-2">Unsaved Changes</h3>
+            <p className="text-xs text-zinc-500 text-center mb-5">Do you want to save before logging out?</p>
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                <button className={`${btnBase} text-zinc-400 bg-zinc-800 hover:bg-zinc-700`} onClick={() => setLogoutConfirmVisible(false)}>
                   Cancel
                 </button>
-                <button
-                  className="confirm-dialog-btn confirm-dialog-btn-danger"
-                  style={{ flex: 1 }}
-                  onClick={() => {
-                    setLogoutConfirmVisible(false);
-                    handleLogout();
-                  }}
-                >
-                  Logout without saving
+                <button className={`${btnBase} text-orange-300 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30`} onClick={() => { setLogoutConfirmVisible(false); handleLogout(); }}>
+                  Logout anyway
                 </button>
               </div>
               <button
-                className="confirm-dialog-btn confirm-dialog-btn-primary"
-                style={{ width: "100%" }}
-                onClick={async () => {
-                  await handleSave();
-                  setLogoutConfirmVisible(false);
-                  handleLogout();
-                }}
+                className="w-full h-9 rounded-lg text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300 transition-all"
+                onClick={async () => { await handleSave(); setLogoutConfirmVisible(false); handleLogout(); }}
               >
-                Save & Logout
+                Save &amp; Logout
               </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* ── New file dialog ── */}
       {newFilePopupVisible && (
-        <div
-          className="confirm-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setNewFilePopupVisible(false);
-          }}
-        >
-          <div className="confirm-dialog">
-            <div style={{ marginBottom: "12px" }}>
-              <div style={{
-                width: 44,
-                height: 44,
-                borderRadius: 12,
-                background: "rgba(96, 165, 250, 0.12)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto 12px",
-              }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="12" y1="18" x2="12" y2="12"/>
-                  <line x1="9" y1="15" x2="15" y2="15"/>
-                </svg>
-              </div>
+        <div className={overlayClass} onClick={(e) => { if (e.target === e.currentTarget) setNewFilePopupVisible(false); }}>
+          <div className={dialogClass}>
+            <div className="w-11 h-11 rounded-xl bg-blue-500/10 flex items-center justify-center mx-auto mb-4">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
+              </svg>
             </div>
-            <div className="confirm-dialog-title">New File</div>
-            <div className="confirm-dialog-subtitle">
-              Enter a question name for your new file.
-            </div>
+            <h3 className="text-sm font-bold text-zinc-100 text-center mb-1">New File</h3>
+            <p className="text-xs text-zinc-500 text-center mb-5">Enter a name for your new file.</p>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 setNewFilePopupVisible(false);
-                handleNewFile(newFileName);
+                handleNewFile(newFileName, newFileFolderId);
               }}
-              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+              className="flex flex-col gap-3"
             >
               <input
                 autoFocus
-                className="save-dialog-input"
-                placeholder="e.g. Two Sum, Merge Sort..."
+                placeholder="e.g. Two Sum, Merge Sort…"
                 value={newFileName}
                 onChange={(e) => setNewFileName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") setNewFilePopupVisible(false);
-                }}
+                onKeyDown={(e) => { if (e.key === "Escape") setNewFilePopupVisible(false); }}
+                className="w-full h-10 px-3 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-100 text-sm font-mono outline-none focus:border-zinc-500 placeholder:text-zinc-600"
               />
-              <div className="confirm-dialog-actions">
-                <button
-                  type="button"
-                  className="confirm-dialog-btn confirm-dialog-btn-cancel"
-                  onClick={() => setNewFilePopupVisible(false)}
-                >
+              <div className="flex gap-2">
+                <button type="button" className={`${btnBase} text-zinc-400 bg-zinc-800 hover:bg-zinc-700`} onClick={() => setNewFilePopupVisible(false)}>
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="confirm-dialog-btn confirm-dialog-btn-primary"
-                >
+                <button type="submit" className={`${btnBase} text-zinc-100 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30`}>
                   Create File
                 </button>
               </div>

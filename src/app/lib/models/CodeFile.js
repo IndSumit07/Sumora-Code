@@ -12,6 +12,11 @@ const codeFileSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+    folderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Folder",
+      default: null,
+    },
   },
   { timestamps: true }
 );

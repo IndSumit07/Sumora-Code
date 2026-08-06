@@ -8,26 +8,13 @@ import { Pencil, Check, X } from "lucide-react";
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
   loading: () => (
-    <div
-      style={{
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 16,
-        color: "var(--text-muted)",
-        fontSize: "13px",
-        fontFamily: "inherit",
-        animation: "fadeIn 300ms ease both",
-      }}
-    >
-      <div className="spinner-lg" />
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-        <span style={{ fontWeight: 600 }}>Loading editor</span>
-        <div className="loading-dots">
-          <span /><span /><span />
-        </div>
+    <div className="h-full flex flex-col items-center justify-center gap-4 text-[var(--text-muted)] text-[13px]">
+      <svg className="animate-spin" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M21 12a9 9 0 11-6.219-8.56"/>
+      </svg>
+      <div className="flex flex-col items-center gap-1">
+        <span className="font-semibold">Loading editor</span>
+        <span className="text-xs opacity-60">Please wait…</span>
       </div>
     </div>
   ),
@@ -39,7 +26,6 @@ const DARK_THEME = {
   base: "vs-dark",
   inherit: false,
   rules: [
-    // VS Code Dark+ palette
     { token: "",             foreground: "d4d4d4", background: "111111" },
     { token: "comment",      foreground: "6a9955", fontStyle: "italic" },
     { token: "comment.doc",  foreground: "608b4e", fontStyle: "italic" },
@@ -92,7 +78,6 @@ const LIGHT_THEME = {
   base: "vs",
   inherit: false,
   rules: [
-    // VS Code Light+ palette
     { token: "",             foreground: "000000", background: "ffffff" },
     { token: "comment",      foreground: "008000", fontStyle: "italic" },
     { token: "comment.doc",  foreground: "008000", fontStyle: "italic" },
@@ -166,7 +151,7 @@ function defineSnippets(monaco) {
           insertText: "System.out.println($1);",
           insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
           documentation: "Print to standard output",
-          range: range,
+          range,
         },
         {
           label: "psvm",
@@ -174,7 +159,7 @@ function defineSnippets(monaco) {
           insertText: "public static void main(String[] args) {\n\t$1\n}",
           insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
           documentation: "Main method",
-          range: range,
+          range,
         },
         {
           label: "fori",
@@ -182,7 +167,7 @@ function defineSnippets(monaco) {
           insertText: "for (int i = 0; i < $1; i++) {\n\t$2\n}",
           insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
           documentation: "For loop (i)",
-          range: range,
+          range,
         },
         {
           label: "forj",
@@ -190,8 +175,8 @@ function defineSnippets(monaco) {
           insertText: "for (int j = 0; j < $1; j++) {\n\t$2\n}",
           insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
           documentation: "For loop (j)",
-          range: range,
-        }
+          range,
+        },
       ];
       return { suggestions };
     },
@@ -212,10 +197,10 @@ function defineSnippets(monaco) {
         {
           label: "cout",
           kind: monaco.languages.CompletionItemKind.Snippet,
-          insertText: "cout << $1 << \"\\\\n\";",
+          insertText: 'cout << $1 << "\\n";',
           insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
           documentation: "Print to standard output",
-          range: range,
+          range,
         },
         {
           label: "cin",
@@ -223,7 +208,7 @@ function defineSnippets(monaco) {
           insertText: "cin >> $1;",
           insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
           documentation: "Read from standard input",
-          range: range,
+          range,
         },
         {
           label: "fori",
@@ -231,7 +216,7 @@ function defineSnippets(monaco) {
           insertText: "for (int i = 0; i < $1; i++) {\n\t$2\n}",
           insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
           documentation: "For loop (i)",
-          range: range,
+          range,
         },
         {
           label: "forj",
@@ -239,8 +224,8 @@ function defineSnippets(monaco) {
           insertText: "for (int j = 0; j < $1; j++) {\n\t$2\n}",
           insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
           documentation: "For loop (j)",
-          range: range,
-        }
+          range,
+        },
       ];
       return { suggestions };
     },
@@ -254,9 +239,7 @@ function FilenameLabel({ fileName, onRename }) {
   const [draft, setDraft] = useState(fileName);
   const inputRef = useRef(null);
 
-  useEffect(() => {
-    setDraft(fileName);
-  }, [fileName]);
+  useEffect(() => { setDraft(fileName); }, [fileName]);
 
   useEffect(() => {
     if (editing && inputRef.current) {
@@ -267,47 +250,47 @@ function FilenameLabel({ fileName, onRename }) {
 
   const commit = () => {
     const trimmed = draft.trim();
-    if (trimmed && trimmed !== fileName) {
-      onRename(trimmed);
-    }
+    if (trimmed && trimmed !== fileName) onRename(trimmed);
     setEditing(false);
   };
 
-  const cancel = () => {
-    setDraft(fileName);
-    setEditing(false);
-  };
+  const cancel = () => { setDraft(fileName); setEditing(false); };
 
   if (editing) {
     return (
       <form
-        className="panel-label editor-filename editor-filename-edit"
+        className="flex items-center gap-1.5 px-3.5 py-2 border-b border-[var(--border-subtle)] flex-shrink-0"
         onSubmit={(e) => { e.preventDefault(); commit(); }}
       >
         <input
           ref={inputRef}
-          className="editor-filename-input"
+          className="flex-1 bg-[var(--bg-input)] border border-[var(--border-subtle)] rounded-md px-2 py-0.5 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-zinc-500 font-mono"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={commit}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") cancel();
-          }}
+          onKeyDown={(e) => { if (e.key === "Escape") cancel(); }}
         />
-        <button type="submit" className="editor-filename-action" aria-label="Confirm rename"><Check size={13} /></button>
-        <button type="button" className="editor-filename-action" onClick={cancel} aria-label="Cancel rename"><X size={13} /></button>
+        <button type="submit" aria-label="Confirm rename" className="p-1 text-emerald-400 hover:text-emerald-300 transition-colors">
+          <Check size={13} />
+        </button>
+        <button type="button" onClick={cancel} aria-label="Cancel rename" className="p-1 text-zinc-500 hover:text-zinc-300 transition-colors">
+          <X size={13} />
+        </button>
       </form>
     );
   }
 
   return (
-    <div className="panel-label editor-filename">
-      <span className="editor-filename-text">{fileName}</span>
+    <div className="flex items-center gap-2 px-3.5 py-2 border-b border-[var(--border-subtle)] flex-shrink-0 group">
+      <span className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
+      <span className="text-[13px] font-bold text-[var(--text-primary)] font-mono truncate flex-1">
+        {fileName}
+      </span>
       <button
-        className="editor-filename-edit-btn"
         onClick={() => setEditing(true)}
         title="Rename file"
         aria-label="Rename file"
+        className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] opacity-0 group-hover:opacity-100 transition-all"
       >
         <Pencil size={12} />
       </button>
@@ -372,8 +355,7 @@ export default function EditorPanel({ language, monacoLang, value, onChange, the
   const options = {
     fontSize: 14,
     lineHeight: 22,
-    fontFamily:
-      "var(--font-editor), 'JetBrains Mono', 'Fira Code', ui-monospace, monospace",
+    fontFamily: "var(--font-editor), 'JetBrains Mono', 'Fira Code', ui-monospace, monospace",
     fontLigatures: true,
     fontVariants: "common-ligatures",
     minimap: { enabled: false },
@@ -426,9 +408,9 @@ export default function EditorPanel({ language, monacoLang, value, onChange, the
   };
 
   return (
-    <div className="panel editor-panel fade-in" style={{ flex: 1 }}>
+    <div className="flex flex-col h-full min-h-0 flex-1 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] overflow-hidden shadow-[var(--shadow-panel)]">
       {fileName && <FilenameLabel fileName={fileName} onRename={onRename} />}
-      <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
+      <div className="flex-1 min-h-0 relative">
         <MonacoEditor
           height="100%"
           language={monacoLang}

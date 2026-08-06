@@ -5,7 +5,7 @@ import { requireAuth } from "@/app/lib/auth";
 export const GET = requireAuth(async (userId) => {
   try {
     await connectDB();
-    const files = await CodeFile.find({ userId }, "question language updatedAt")
+    const files = await CodeFile.find({ userId }, "question language updatedAt folderId")
       .sort({ updatedAt: -1 })
       .lean();
     return Response.json(files);
@@ -18,7 +18,7 @@ export const GET = requireAuth(async (userId) => {
 export const POST = requireAuth(async (userId, request) => {
   try {
     await connectDB();
-    const { question, language, code, input } = await request.json();
+    const { question, language, code, input, folderId } = await request.json();
 
     if (!question?.trim()) {
       return Response.json({ error: "Question name is required" }, { status: 400 });
@@ -30,6 +30,7 @@ export const POST = requireAuth(async (userId, request) => {
       code: code || "",
       input: input || "",
       userId,
+      folderId: folderId || null,
     });
 
     return Response.json(file.toObject(), { status: 201 });
