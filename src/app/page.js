@@ -540,17 +540,16 @@ export default function EditorPage() {
         copySignal={copySignal}
       />
 
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        <Sidebar
-          isOpen={isSidebarOpen}
-          files={files}
-          currentFileId={currentFileId}
-          onSelectFile={handleSelectFile}
-          onNewFile={handleSidebarNewFile}
-          onDeleteFile={handleDeleteFile}
-          onRenameFile={handleRenameFile}
-        />
-
+      <Sidebar
+        isOpen={isSidebarOpen}
+        files={files}
+        currentFileId={currentFileId}
+        onSelectFile={handleSelectFile}
+        onNewFile={handleSidebarNewFile}
+        onDeleteFile={handleDeleteFile}
+        onRenameFile={handleRenameFile}
+      >
+        {/* ── Main editor area (inside SidebarInset) ── */}
         <main className="flex flex-1 min-h-0 min-w-0 gap-2 p-2" ref={editorAreaRef} role="main">
           {/* Editor column */}
           <div
@@ -600,7 +599,8 @@ export default function EditorPage() {
             />
           </div>
         </main>
-      </div>
+      </Sidebar>
+
 
       {/* ── Delete confirm dialog ── */}
       {deleteConfirmId && (
