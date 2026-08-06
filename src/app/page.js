@@ -94,6 +94,11 @@ export default function EditorPage() {
     const savedTheme = loadPersistedTheme();
     setTheme(savedTheme);
     document.documentElement.setAttribute("data-theme", savedTheme);
+    if (savedTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
 
     fetch("/api/auth/me")
       .then(async (r) => {
@@ -139,6 +144,11 @@ export default function EditorPage() {
     setTheme((prev) => {
       const next = prev === "dark" ? "light" : "dark";
       document.documentElement.setAttribute("data-theme", next);
+      if (next === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
       saveTheme(next);
       return next;
     });
@@ -587,7 +597,7 @@ export default function EditorPage() {
           </div>
 
           {/* IO column */}
-          <div className="flex flex-1 min-w-0 min-h-0">
+          <div className="flex flex-1 min-w-0 min-h-0 flex-col">
             <IOPanel
               input={input}
               onInputChange={setInput}
