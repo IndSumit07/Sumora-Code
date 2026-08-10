@@ -47,7 +47,7 @@ export default function IOPanel({
     >
       {/* stdin */}
       <div
-        className="flex flex-col min-h-0 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] overflow-hidden shadow-[var(--shadow-panel)]"
+        className="flex flex-col min-h-0 border-l border-[var(--border-subtle)] bg-[var(--bg-panel)] overflow-hidden"
         style={{ flex: inputHeightPx ? `0 0 ${inputHeightPx}px` : "0 0 35%", minHeight: 0 }}
       >
         <div className="flex items-center gap-1.5 px-3.5 py-2 border-b border-[var(--border-subtle)] flex-shrink-0">
@@ -70,16 +70,16 @@ export default function IOPanel({
 
       {/* Vertical resize handle */}
       <div
-        className="h-2 cursor-row-resize flex items-center justify-center group flex-shrink-0"
+        className="h-1 cursor-row-resize flex items-center justify-center group flex-shrink-0 hover:bg-[var(--border-subtle)] transition-colors"
         onMouseDown={onVResizeStart}
         title="Drag to resize"
         aria-hidden="true"
       >
-        <div className="w-8 h-0.5 rounded-full bg-[var(--border-subtle)] group-hover:bg-[var(--text-muted)] transition-colors" />
+        <div className="w-8 h-px rounded-full bg-[var(--sb-border)] group-hover:bg-[var(--sb-accent)] transition-colors" />
       </div>
 
       {/* stdout / stderr */}
-      <div className="flex flex-col min-h-0 flex-1 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] overflow-hidden shadow-[var(--shadow-panel)]">
+      <div className="flex flex-col min-h-0 flex-1 border-l border-[var(--border-subtle)] bg-[var(--bg-panel)] overflow-hidden">
         <div className="flex items-center justify-between px-3.5 py-2 border-b border-[var(--border-subtle)] flex-shrink-0">
           <span className="flex items-center gap-1.5">
             <span

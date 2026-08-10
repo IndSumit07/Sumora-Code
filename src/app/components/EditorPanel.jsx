@@ -408,7 +408,7 @@ export default function EditorPanel({ language, monacoLang, value, onChange, the
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0 flex-1 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] overflow-hidden shadow-[var(--shadow-panel)]">
+    <div className="flex flex-col h-full min-h-0 flex-1 border-l border-[var(--border-subtle)] bg-[var(--bg-panel)] overflow-hidden">
       {fileName && <FilenameLabel fileName={fileName} onRename={onRename} />}
       <div className="flex-1 min-h-0 relative">
         <MonacoEditor

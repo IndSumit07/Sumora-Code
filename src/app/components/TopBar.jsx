@@ -25,21 +25,22 @@ export default function TopBar({
   return (
     <header
       role="banner"
-      className="flex items-center gap-2 h-12 px-3 border-b border-zinc-800 bg-[var(--bg-topbar)] flex-shrink-0 z-10"
+      className="flex items-center gap-2 h-12 px-3 border-b border-[var(--sb-border)] bg-[var(--bg-topbar)] flex-shrink-0 z-10"
     >
       {/* Sidebar toggle */}
       <button
         onClick={onToggleSidebar}
         aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
         title={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-        className="flex items-center justify-center w-8 h-8 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+        className="flex items-center justify-center w-8 h-8 rounded-md text-[var(--tb-text-muted)] hover:text-[var(--tb-text)] hover:bg-[var(--tb-btn-hover)] transition-colors"
       >
         <PanelLeft size={17} />
       </button>
 
       {/* Brand */}
-      <span className="text-sm font-bold tracking-tight text-zinc-100 select-none">
-        Sumora<span className="text-zinc-500">Code</span>
+      <span className="text-sm font-bold tracking-tight select-none">
+        <span className="text-[var(--tb-text-brand)]">Sumora</span>
+        <span className="text-[var(--tb-text-muted)]">Code</span>
       </span>
 
       {/* Copy signal */}
@@ -62,7 +63,7 @@ export default function TopBar({
         onClick={onSave}
         aria-label="Save (Ctrl+S)"
         title="Save (Ctrl+S)"
-        className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-semibold text-zinc-300 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 transition-all"
+        className="flex items-center gap-1.5 px-3 h-8 rounded-md text-xs font-semibold text-[var(--tb-text)] bg-[var(--tb-btn-bg)] hover:bg-[var(--tb-btn-hover)] border border-[var(--tb-btn-border)] hover:border-[var(--tb-btn-hover-border)] transition-all"
       >
         <Save size={13} />
         Save
@@ -78,7 +79,7 @@ export default function TopBar({
         value={language}
         onChange={(e) => onLanguageChange(e.target.value)}
         aria-label="Select programming language"
-        className="h-8 px-2.5 rounded-lg text-xs font-semibold bg-zinc-800 text-zinc-200 border border-zinc-700 hover:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600 cursor-pointer transition-colors appearance-none"
+        className="h-8 px-2.5 rounded-md text-xs font-semibold bg-[var(--tb-btn-bg)] text-[var(--tb-text)] border border-[var(--tb-btn-border)] hover:border-[var(--tb-btn-hover-border)] focus:outline-none focus:ring-1 focus:ring-[var(--sb-accent)] cursor-pointer transition-colors appearance-none"
       >
         <option value="java">Java</option>
         <option value="cpp">C++</option>
@@ -91,7 +92,7 @@ export default function TopBar({
         disabled={isRunning}
         aria-label={isRunning ? "Running..." : "Run code (Ctrl+')"}
         title="Run (Ctrl+')"
-        className="flex items-center gap-1.5 px-3.5 h-8 rounded-lg text-xs font-bold bg-[var(--btn-run-bg)] text-[var(--btn-run-text)] hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-sm"
+        className="flex items-center gap-1.5 px-3.5 h-8 rounded-md text-xs font-bold bg-[var(--btn-run-bg)] text-[var(--btn-run-text)] hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-sm"
       >
         {isRunning ? (
           <>
@@ -114,7 +115,7 @@ export default function TopBar({
       {userEmail && (
         <span
           title={userEmail}
-          className="hidden sm:block text-xs text-zinc-500 max-w-[140px] truncate"
+          className="hidden sm:block text-xs text-[var(--tb-text-muted)] max-w-[140px] truncate"
         >
           {userEmail}
         </span>
@@ -126,7 +127,7 @@ export default function TopBar({
           onClick={onLogout}
           aria-label="Sign out"
           title="Sign out"
-          className="flex items-center justify-center w-8 h-8 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+          className="flex items-center justify-center w-8 h-8 rounded-md text-[var(--tb-text-muted)] hover:text-red-400/80 hover:bg-red-500/10 transition-colors"
         >
           <LogOut size={15} />
         </button>
@@ -138,7 +139,7 @@ export default function TopBar({
         onClick={onThemeToggle}
         aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
         title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-        className="flex items-center justify-center w-8 h-8 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+        className="flex items-center justify-center w-8 h-8 rounded-md text-[var(--tb-text-muted)] hover:text-[var(--tb-text)] hover:bg-[var(--tb-btn-hover)] transition-colors"
       >
         {theme === "dark" ? (
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
