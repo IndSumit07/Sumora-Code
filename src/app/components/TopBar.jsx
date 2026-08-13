@@ -81,8 +81,10 @@ export default function TopBar({
         aria-label="Select programming language"
         className="h-8 px-2.5 rounded-md text-xs font-semibold bg-[var(--tb-btn-bg)] text-[var(--tb-text)] border border-[var(--tb-btn-border)] hover:border-[var(--tb-btn-hover-border)] focus:outline-none focus:ring-1 focus:ring-[var(--sb-accent)] cursor-pointer transition-colors appearance-none"
       >
-        <option value="java">Java</option>
-        <option value="cpp">C++</option>
+        <option value="python">Python 3.8</option>
+        <option value="java">Java (OpenJDK 17)</option>
+        <option value="cpp">C++ (GCC 9)</option>
+        <option value="c">C (GCC 9)</option>
       </select>
 
       {/* Run button */}

@@ -230,6 +230,112 @@ function defineSnippets(monaco) {
       return { suggestions };
     },
   });
+
+  // Python Snippets
+  monaco.languages.registerCompletionItemProvider("python", {
+    provideCompletionItems: (model, position) => {
+      const word = model.getWordUntilPosition(position);
+      const range = {
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: word.startColumn,
+        endColumn: word.endColumn,
+      };
+
+      const suggestions = [
+        {
+          label: "print",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "print($1)",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Print to standard output",
+          range,
+        },
+        {
+          label: "input",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "$1 = int(input())",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Read integer from stdin",
+          range,
+        },
+        {
+          label: "fori",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "for i in range($1):\n\t$2",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "For loop with range",
+          range,
+        },
+        {
+          label: "def",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "def ${1:func_name}(${2:args}):\n\t${3:pass}",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Function definition",
+          range,
+        },
+        {
+          label: "list_comp",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "[${1:expr} for ${2:x} in ${3:iterable}]",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "List comprehension",
+          range,
+        },
+      ];
+      return { suggestions };
+    },
+  });
+
+  // C Snippets
+  monaco.languages.registerCompletionItemProvider("c", {
+    provideCompletionItems: (model, position) => {
+      const word = model.getWordUntilPosition(position);
+      const range = {
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: word.startColumn,
+        endColumn: word.endColumn,
+      };
+
+      const suggestions = [
+        {
+          label: "printf",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: 'printf("$1\\n");',
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Print to standard output",
+          range,
+        },
+        {
+          label: "scanf",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: 'scanf("$1", &${2:var});',
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Read from standard input",
+          range,
+        },
+        {
+          label: "fori",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "for (int i = 0; i < $1; i++) {\n\t$2\n}",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "For loop (i)",
+          range,
+        },
+        {
+          label: "malloc",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "${1:int} *${2:arr} = (${1:int} *)malloc(${3:n} * sizeof(${1:int}));",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Allocate array with malloc",
+          range,
+        },
+      ];
+      return { suggestions };
+    },
+  });
 }
 
 // ── Inline filename edit ────────────────────────────────────────────────────

@@ -4,8 +4,6 @@ import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import {
   ChevronRight,
   ChevronsDownUp,
-  Coffee,
-  Cpu,
   File,
   FilePlus2,
   Folder,
@@ -29,8 +27,35 @@ import { cn } from "@/lib/utils";
 
 // ── Language icon ──────────────────────────────────────────────────────────
 function LangBadge({ language }) {
-  if (language === "java") return <Coffee size={14} className="text-orange-400/70 flex-shrink-0" />;
-  if (language === "cpp") return <Cpu size={14} className="text-sky-400/70 flex-shrink-0" />;
+  // Python — green snake icon
+  if (language === "python") return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="flex-shrink-0" aria-label="Python">
+      <rect width="14" height="14" rx="3" fill="#3d8fcd" fillOpacity="0.18" />
+      <text x="7" y="10.5" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#4ec9b0" fontFamily="monospace">Py</text>
+    </svg>
+  );
+  // C — blue C badge
+  if (language === "c") return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="flex-shrink-0" aria-label="C">
+      <rect width="14" height="14" rx="3" fill="#569cd6" fillOpacity="0.18" />
+      <text x="7" y="10.5" textAnchor="middle" fontSize="9" fontWeight="bold" fill="#569cd6" fontFamily="monospace">C</text>
+    </svg>
+  );
+  // C++ — purple badge
+  if (language === "cpp") return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="flex-shrink-0" aria-label="C++">
+      <rect width="14" height="14" rx="3" fill="#9d7fcd" fillOpacity="0.18" />
+      <text x="7" y="10.5" textAnchor="middle" fontSize="7" fontWeight="bold" fill="#b09fda" fontFamily="monospace">C++</text>
+    </svg>
+  );
+  // Java — orange coffee cup
+  if (language === "java") return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="flex-shrink-0" aria-label="Java">
+      <rect width="14" height="14" rx="3" fill="#f0a04b" fillOpacity="0.18" />
+      <text x="7" y="10.5" textAnchor="middle" fontSize="7" fontWeight="bold" fill="#e0a060" fontFamily="monospace">JV</text>
+    </svg>
+  );
+  // Default
   return <File size={14} className="text-zinc-500/70 flex-shrink-0" />;
 }
 
