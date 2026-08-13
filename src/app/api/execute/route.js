@@ -60,19 +60,19 @@ export const POST = requireAuth(async (_userId, request) => {
     };
 
     // Auth header logic:
-    // - Self-hosted Judge0 → X-Auth-Token (configured via AUTHN_TOKEN in docker-compose)
-    // - RapidAPI hosted    → X-RapidAPI-Key + X-RapidAPI-Host
+    // - Self-hosted CodeBox/Judge0 → X-Auth-Token
+    // - RapidAPI hosted            → X-RapidAPI-Key + X-RapidAPI-Host
     const isRapidApi = apiUrl.includes("rapidapi.com");
-    if (apiKey && apiKey !== "your_rapidapi_key_here") {
-      if (isRapidApi) {
+    if (isRapidApi) {
+      if (apiKey) {
         headers["X-RapidAPI-Key"] = apiKey;
         headers["X-RapidAPI-Host"] = "judge0-ce.p.rapidapi.com";
-      } else {
-        // Self-hosted with AUTHN_TOKEN configured
-        headers["X-Auth-Token"] = apiKey;
       }
+    } else if (apiKey) {
+      // Self-hosted: always forward the token (required by CodeBox)
+      headers["X-Auth-Token"] = apiKey;
     }
-    // If apiKey is blank → self-hosted with no auth (default docker-compose setup)
+    // If no apiKey at all → self-hosted with auth disabled
 
     const judge0Response = await fetch(judge0Url, {
       method: "POST",
