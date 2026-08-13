@@ -65,29 +65,32 @@
   --sidebar-accent-foreground:oklch(0.205 0 0);
   --sidebar-border:    oklch(0.922 0 0);
   --sidebar-ring:      oklch(0.708 0 0);
-  /* VS Code sidebar — Dark Modern (matte) */
-  --sb-activity:        #1a1a1a;
-  --sb-activity-hover:  #252525;
-  --sb-panel:           #1c1c1c;
-  --sb-input:           #2e2e2e;
-  --sb-item-hover:      #232323;
-  --sb-item-active:     #1a3050;
-  --sb-accent:          #4a90c4;
-  --sb-text:            #b0b0b0;
-  --sb-text-active:     #d8d8d8;
-  --sb-text-muted:      #6a6a6a;
-  --sb-border:          #222222;
-  --sb-folder:          #c4a86a;
-  --sb-folder-open:     #c4a86a;
-  /* Topbar — Dark (matte) */
-  --tb-text:            #b0b0b0;
-  --tb-text-muted:      #6a6a6a;
-  --tb-text-brand:      #d0d0d0;
-  --tb-btn-bg:          #222222;
-  --tb-btn-hover:       #2a2a2a;
-  --tb-btn-border:      #2a2a2a;
-  --tb-btn-hover-border:#333333;
-  --tb-skeleton:        #1a1a1a;
+  /* VS Code sidebar — Dark Modern */
+  --sb-activity:        #181818;
+  --sb-activity-hover:  #2a2a2a;
+  --sb-panel:           #1e1e1e;
+  --sb-input:           #3c3c3c;
+  --sb-input-border:    #007fd4;
+  --sb-item-hover:      #2a2d2e;
+  --sb-item-active:     #094771;
+  --sb-item-active-text:#ffffff;
+  --sb-accent:          #007fd4;
+  --sb-text:            #cccccc;
+  --sb-text-active:     #ffffff;
+  --sb-text-muted:      #858585;
+  --sb-border:          #303030;
+  --sb-folder:          #dcb67a;
+  --sb-folder-open:     #dcb67a;
+  --sb-section-label:   #bbbbbb;
+  /* Topbar — Dark Modern */
+  --tb-text:            #cccccc;
+  --tb-text-muted:      #858585;
+  --tb-text-brand:      #e0e0e0;
+  --tb-btn-bg:          #333333;
+  --tb-btn-hover:       #3e3e3e;
+  --tb-btn-border:      #444444;
+  --tb-btn-hover-border:#555555;
+  --tb-skeleton:        #252525;
 }
 
 :root[data-theme="light"] {
@@ -140,28 +143,30 @@
   --sidebar-accent-foreground:oklch(0.205 0 0);
   --sidebar-border:    oklch(0.922 0 0);
   --sidebar-ring:      oklch(0.708 0 0);
-  /* VS Code sidebar — Light Modern (matte) */
-  --sb-activity:        #e0e0e0;
-  --sb-activity-hover:  #d8d8d8;
-  --sb-panel:           #ececec;
-  --sb-input:           #f5f5f5;
-  --sb-item-hover:      #e2e2e2;
-  --sb-item-active:     #c8ddf0;
-  --sb-accent:          #5a9fd4;
-  --sb-text:            #555555;
-  --sb-text-active:     #333333;
+  /* VS Code sidebar — Light Modern */
+  --sb-activity:        #e8e8e8;
+  --sb-activity-hover:  #d0d0d0;
+  --sb-panel:           #f3f3f3;
+  --sb-input:           #ffffff;
+  --sb-input-border:    #0078d4;
+  --sb-item-hover:      #e8e8e8;
+  --sb-item-active:     #cce5ff;
+  --sb-item-active-text:#000000;
+  --sb-accent:          #0078d4;
+  --sb-text:            #424242;
+  --sb-text-active:     #000000;
   --sb-text-muted:      #888888;
-  --sb-border:          #d8d8d8;
-  --sb-folder:          #b89a5c;
-  --sb-folder-open:     #b89a5c;
-  /* Topbar — Light (matte) */
-  --tb-text:            #555555;
+  --sb-border:          #e0e0e0;
+  --sb-folder:          #c09a3c;
+  --sb-folder-open:     #c09a3c;
+  /* Topbar — Light Modern */
+  --tb-text:            #424242;
   --tb-text-muted:      #888888;
-  --tb-text-brand:      #333333;
-  --tb-btn-bg:          #e0e0e0;
-  --tb-btn-hover:       #d4d4d4;
-  --tb-btn-border:      #d4d4d4;
-  --tb-btn-hover-border:#c8c8c8;
+  --tb-text-brand:      #222222;
+  --tb-btn-bg:          #e8e8e8;
+  --tb-btn-hover:       #d8d8d8;
+  --tb-btn-border:      #d0d0d0;
+  --tb-btn-hover-border:#b8b8b8;
   --tb-skeleton:        #e0e0e0;
 }
 
@@ -256,7 +261,7 @@ html, body {
 body {
   background-color: var(--bg-base);
   color: var(--text-primary);
-  font-family: var(--font-editor), 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   transition: background-color 250ms ease, color 250ms ease, border-color 250ms ease, box-shadow 250ms ease;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

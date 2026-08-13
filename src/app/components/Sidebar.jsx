@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import {
-  Check,
   ChevronRight,
   ChevronsDownUp,
   Coffee,
@@ -17,7 +16,6 @@ import {
   Pencil,
   Plus,
   Trash2,
-  X,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -39,11 +37,11 @@ function LangBadge({ language }) {
 // ── Shared primitives ──────────────────────────────────────────────────────
 function PanelHeader({ title, children }) {
   return (
-    <div className="flex items-center justify-between h-9 pl-3 pr-1.5 flex-shrink-0 border-b border-[var(--sb-border)]">
-      <span className="text-[10.5px] font-bold tracking-[0.12em] uppercase text-[var(--sb-text-muted)] select-none">
+    <div className="flex items-center justify-between h-9 pl-3 pr-1 flex-shrink-0 border-b border-[var(--sb-border)]" style={{ background: "var(--sb-panel)" }}>
+      <span className="text-[11px] font-semibold tracking-[0.08em] uppercase select-none" style={{ color: "var(--sb-text-muted)", letterSpacing: "0.08em", fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif" }}>
         {title}
       </span>
-      <div className="flex items-center gap-0.5">{children}</div>
+      <div className="flex items-center gap-0">{children}</div>
     </div>
   );
 }
@@ -55,10 +53,10 @@ function PanelIconButton({ title, onClick, children, danger }) {
       aria-label={title}
       onClick={onClick}
       className={cn(
-        "flex items-center justify-center w-6 h-6 rounded text-[var(--sb-text-muted)] transition-colors",
+        "flex items-center justify-center w-7 h-7 rounded transition-colors",
         danger
-          ? "hover:text-red-400/80 hover:bg-red-500/10"
-          : "hover:text-[var(--sb-text)] hover:bg-[var(--sb-item-hover)]"
+          ? "text-[var(--sb-text-muted)] hover:text-red-400 hover:bg-red-500/10"
+          : "text-[var(--sb-text-muted)] hover:text-[var(--sb-text)] hover:bg-[var(--sb-item-hover)]"
       )}
     >
       {children}
@@ -72,7 +70,7 @@ function SmallAction({ title, onClick, children }) {
       title={title}
       aria-label={title}
       onClick={onClick}
-      className="flex items-center justify-center w-5 h-5 rounded hover:bg-[var(--sb-item-active)] text-[var(--sb-text-muted)] hover:text-[var(--sb-text)] transition-colors"
+      className="flex items-center justify-center w-5 h-5 rounded text-[var(--sb-text-muted)] hover:text-[var(--sb-text)] hover:bg-[var(--sb-item-hover)] transition-colors"
     >
       {children}
     </button>
@@ -100,18 +98,23 @@ function InlineRename({ value, onCommit, onCancel }) {
     >
       <input
         ref={ref}
-        className="flex-1 min-w-0 h-6 px-1.5 rounded bg-[var(--sb-input)] border border-[var(--sb-border)] text-[var(--sb-text)] text-xs outline-none focus:border-[var(--sb-accent)]"
+        style={{
+          flex: 1, minWidth: 0, height: 22,
+          padding: "0 6px",
+          borderRadius: 2,
+          background: "var(--sb-input)",
+          border: "1px solid var(--sb-accent)",
+          color: "var(--sb-text)",
+          fontSize: 13,
+          fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif",
+          outline: "none",
+          boxShadow: "0 0 0 1px var(--sb-accent)",
+        }}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => { if (e.key === "Escape") { e.preventDefault(); onCancel(); } }}
       />
-      <button type="submit" className="p-0.5 text-emerald-400/80 hover:text-emerald-300 flex-shrink-0">
-        <Check size={12} />
-      </button>
-      <button type="button" onClick={onCancel} className="p-0.5 text-[var(--sb-text-muted)] hover:text-[var(--sb-text)] flex-shrink-0">
-        <X size={12} />
-      </button>
     </form>
   );
 }
@@ -130,30 +133,38 @@ function InlineCreateItem({ type, parentId, onCommit, onCancel }) {
   };
 
   return (
-    <div className="flex items-center gap-1.5 h-[26px] pr-1" style={{ paddingLeft: 8 + (parentId ? 1 : 0) * 14 }}>
+    <div
+      className="flex items-center gap-1.5 pr-2"
+      style={{ paddingLeft: 8 + (parentId ? 1 : 0) * 14, height: 22, marginTop: 1, marginBottom: 1 }}
+    >
       {type === "folder"
         ? <Folder size={14} className="text-[var(--sb-folder)] flex-shrink-0" />
-        : <LangBadge language="java" />
+        : <File size={14} className="text-[var(--sb-text-muted)] flex-shrink-0" />
       }
       <form
-        className="flex items-center gap-1 flex-1 min-w-0"
+        className="flex flex-1 min-w-0"
         onSubmit={(e) => { e.preventDefault(); commit(); }}
         onClick={(e) => e.stopPropagation()}
       >
         <input
           ref={ref}
-          className="flex-1 min-w-0 h-6 px-1.5 rounded bg-[var(--sb-input)] border border-[var(--sb-accent)] text-[var(--sb-text)] text-xs outline-none"
+          style={{
+            flex: 1, minWidth: 0, height: 22,
+            padding: "0 6px",
+            borderRadius: 2,
+            background: "var(--sb-input)",
+            border: "1px solid var(--sb-accent)",
+            color: "var(--sb-text)",
+            fontSize: 13,
+            fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif",
+            outline: "none",
+            boxShadow: "0 0 0 1px var(--sb-accent)",
+          }}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={commit}
           onKeyDown={(e) => { if (e.key === "Escape") { e.preventDefault(); onCancel(); } }}
         />
-        <button type="submit" className="p-0.5 text-emerald-400/80 hover:text-emerald-300 flex-shrink-0">
-          <Check size={12} />
-        </button>
-        <button type="button" onClick={onCancel} className="p-0.5 text-[var(--sb-text-muted)] hover:text-[var(--sb-text)] flex-shrink-0">
-          <X size={12} />
-        </button>
       </form>
     </div>
   );
@@ -164,9 +175,12 @@ function FileItem({ file, isActive, onSelect, onRename, onDelete, depth = 0 }) {
   const [renaming, setRenaming] = useState(false);
 
   return (
-    <div className="relative" style={{ paddingLeft: 8 + depth * 14 }}>
+    <div className="relative">
       {renaming ? (
-        <div className="flex items-center gap-1.5 h-6 pr-1">
+        <div
+          className="flex items-center gap-1.5 pr-2"
+          style={{ paddingLeft: 8 + depth * 14, height: 22, marginTop: 1, marginBottom: 1 }}
+        >
           <LangBadge language={file.language} />
           <InlineRename
             value={file.question}
@@ -180,27 +194,38 @@ function FileItem({ file, isActive, onSelect, onRename, onDelete, depth = 0 }) {
           tabIndex={0}
           onClick={() => onSelect(file)}
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(file); } }}
-          className={cn(
-            "group/file flex items-center gap-1.5 h-[26px] pr-1 cursor-pointer select-none rounded-[4px] transition-colors",
-            isActive
-              ? "bg-[var(--sb-item-active)] text-[var(--sb-text-active)] font-medium"
-              : "text-[var(--sb-text-muted)] hover:bg-[var(--sb-item-hover)] hover:text-[var(--sb-text)]"
-          )}
+          className="group/file flex items-center gap-1.5 h-[22px] pr-1 cursor-pointer select-none transition-colors"
+          style={{
+            paddingLeft: 8 + depth * 14,
+            background: isActive ? "var(--sb-item-active)" : undefined,
+            color: isActive ? "var(--sb-text-active)" : "var(--sb-text)",
+            fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif",
+          }}
+          onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "var(--sb-item-hover)"; }}
+          onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = ""; }}
         >
           <LangBadge language={file.language} />
-          <span className="flex-1 truncate text-[13px] leading-none">{file.question}</span>
+          <span className="flex-1 truncate" style={{ fontSize: 13, lineHeight: 1 }}>{file.question}</span>
           <DropdownMenu>
             <DropdownMenuTrigger
               onClick={(e) => e.stopPropagation()}
-              className="opacity-0 group-hover/file:opacity-100 flex items-center justify-center w-5 h-5 rounded hover:bg-[var(--sb-item-active)] text-[var(--sb-text-muted)] transition-all"
+              className="opacity-0 group-hover/file:opacity-100 flex items-center justify-center w-5 h-5 rounded text-[var(--sb-text-muted)] hover:text-[var(--sb-text)] hover:bg-white/10 transition-all"
             >
-              <MoreHorizontal size={14} />
+              <MoreHorizontal size={13} />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-36 bg-[var(--sb-panel)] border-[var(--sb-border)] text-[var(--sb-text)]">
-              <DropdownMenuItem className="gap-2 cursor-pointer text-xs hover:bg-[var(--sb-item-hover)] focus:bg-[var(--sb-item-hover)]" onClick={(e) => { e.stopPropagation(); setRenaming(true); }}>
+            <DropdownMenuContent align="end" className="w-40" style={{ background: "#252526", border: "1px solid #454545", color: "#cccccc", borderRadius: 6, padding: "4px 0" }}>
+              <DropdownMenuItem
+                className="gap-2 cursor-pointer focus:outline-none"
+                style={{ fontSize: 12, padding: "5px 12px", fontFamily: "system-ui, sans-serif" }}
+                onClick={(e) => { e.stopPropagation(); setRenaming(true); }}
+              >
                 <Pencil size={12} /> Rename
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-2 cursor-pointer text-xs text-red-400/80 hover:bg-red-500/10 focus:bg-red-500/10 hover:text-red-300" onClick={(e) => { e.stopPropagation(); onDelete(file._id); }}>
+              <DropdownMenuItem
+                className="gap-2 cursor-pointer focus:outline-none"
+                style={{ fontSize: 12, padding: "5px 12px", color: "#f48771", fontFamily: "system-ui, sans-serif" }}
+                onClick={(e) => { e.stopPropagation(); onDelete(file._id); }}
+              >
                 <Trash2 size={12} /> Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -238,7 +263,10 @@ function FolderItem({ folder, files, allFolders, currentFileId, expanded, collap
   return (
     <div>
       {renaming ? (
-        <div className="flex items-center gap-1.5 h-6 pr-1" style={{ paddingLeft: 8 + depth * 14 }}>
+        <div
+          className="flex items-center gap-1.5 pr-2"
+          style={{ paddingLeft: 8 + depth * 14, height: 22, marginTop: 1, marginBottom: 1 }}
+        >
           <Folder size={14} className="text-[var(--sb-folder)] flex-shrink-0" />
           <InlineRename
             value={folder.name}
@@ -252,19 +280,21 @@ function FolderItem({ folder, files, allFolders, currentFileId, expanded, collap
           tabIndex={0}
           onClick={() => onToggleFolder(folder._id, !open)}
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggleFolder(folder._id, !open); } }}
-          className={cn(
-            "group/folder flex items-center gap-1 h-[26px] pr-1 cursor-pointer select-none rounded-[4px] transition-colors",
-            containsActive ? "text-[var(--sb-text)]" : "text-[var(--sb-text-muted)]",
-            "hover:bg-[var(--sb-item-hover)] hover:text-[var(--sb-text)]"
-          )}
-          style={{ paddingLeft: 8 + depth * 14 }}
+          className="group/folder flex items-center gap-1 h-[22px] pr-1 cursor-pointer select-none transition-colors"
+          style={{
+            paddingLeft: 8 + depth * 14,
+            color: containsActive ? "var(--sb-text)" : "var(--sb-text)",
+            fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--sb-item-hover)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = ""; }}
           title={folder.name}
         >
-          <ChevronRight size={13} className={cn("text-[var(--sb-text-muted)] transition-transform duration-150 flex-shrink-0", open && "rotate-90")} />
-          {open ? <FolderOpen size={15} className="text-[var(--sb-folder-open)] flex-shrink-0" /> : <Folder size={15} className="text-[var(--sb-folder)] flex-shrink-0" />}
-          <span className="flex-1 truncate text-[13px] leading-none">{folder.name}</span>
+          <ChevronRight size={12} className={cn("transition-transform duration-150 flex-shrink-0", open && "rotate-90")} style={{ color: "var(--sb-text-muted)" }} />
+          {open ? <FolderOpen size={14} className="flex-shrink-0" style={{ color: "var(--sb-folder-open)" }} /> : <Folder size={14} className="flex-shrink-0" style={{ color: "var(--sb-folder)" }} />}
+          <span className="flex-1 truncate" style={{ fontSize: 13, lineHeight: 1 }}>{folder.name}</span>
 
-          <span className="hidden group-hover/folder:flex items-center gap-0.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+          <span className="hidden group-hover/folder:flex items-center gap-0 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
             <SmallAction title="New File" onClick={() => onCreateFile(folder._id)}>
               <FilePlus2 size={13} />
             </SmallAction>
@@ -273,21 +303,21 @@ function FolderItem({ folder, files, allFolders, currentFileId, expanded, collap
             </SmallAction>
             <DropdownMenu>
               <DropdownMenuTrigger
-                className="flex items-center justify-center w-5 h-5 rounded hover:bg-[var(--sb-item-active)] text-[var(--sb-text-muted)] hover:text-[var(--sb-text)] transition-colors"
+                className="flex items-center justify-center w-5 h-5 rounded text-[var(--sb-text-muted)] hover:text-[var(--sb-text)] hover:bg-white/10 transition-colors"
               >
                 <MoreHorizontal size={13} />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44 bg-[var(--sb-panel)] border-[var(--sb-border)] text-[var(--sb-text)]">
-                <DropdownMenuItem className="gap-2 cursor-pointer text-xs hover:bg-[var(--sb-item-hover)] focus:bg-[var(--sb-item-hover)]" onClick={(e) => { e.stopPropagation(); onCreateFile(folder._id); }}>
+              <DropdownMenuContent align="end" className="w-44" style={{ background: "#252526", border: "1px solid #454545", color: "#cccccc", borderRadius: 6, padding: "4px 0" }}>
+                <DropdownMenuItem className="gap-2 cursor-pointer focus:outline-none" style={{ fontSize: 12, padding: "5px 12px", fontFamily: "system-ui, sans-serif" }} onClick={(e) => { e.stopPropagation(); onCreateFile(folder._id); }}>
                   <Plus size={12} /> New File Here
                 </DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 cursor-pointer text-xs hover:bg-[var(--sb-item-hover)] focus:bg-[var(--sb-item-hover)]" onClick={(e) => { e.stopPropagation(); onCreateSubFolder(folder._id); }}>
+                <DropdownMenuItem className="gap-2 cursor-pointer focus:outline-none" style={{ fontSize: 12, padding: "5px 12px", fontFamily: "system-ui, sans-serif" }} onClick={(e) => { e.stopPropagation(); onCreateSubFolder(folder._id); }}>
                   <FolderPlus size={12} /> New Sub-folder
                 </DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 cursor-pointer text-xs hover:bg-[var(--sb-item-hover)] focus:bg-[var(--sb-item-hover)]" onClick={(e) => { e.stopPropagation(); setRenaming(true); }}>
+                <DropdownMenuItem className="gap-2 cursor-pointer focus:outline-none" style={{ fontSize: 12, padding: "5px 12px", fontFamily: "system-ui, sans-serif" }} onClick={(e) => { e.stopPropagation(); setRenaming(true); }}>
                   <Pencil size={12} /> Rename
                 </DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 cursor-pointer text-xs text-red-400/80 hover:bg-red-500/10 focus:bg-red-500/10 hover:text-red-300" onClick={(e) => { e.stopPropagation(); onDeleteFolder(folder._id); }}>
+                <DropdownMenuItem className="gap-2 cursor-pointer focus:outline-none" style={{ fontSize: 12, padding: "5px 12px", color: "#f48771", fontFamily: "system-ui, sans-serif" }} onClick={(e) => { e.stopPropagation(); onDeleteFolder(folder._id); }}>
                   <Trash2 size={12} /> Delete Folder
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -297,7 +327,7 @@ function FolderItem({ folder, files, allFolders, currentFileId, expanded, collap
       )}
 
       {open && (hasChildren || isCreatingHere) && (
-        <div className="border-l border-[var(--sb-border)] ml-[15px] pl-[5px]">
+        <div style={{ borderLeft: "1px solid var(--sb-border)", marginLeft: 16 + depth * 14, paddingLeft: 0 }}>
           {isCreatingHere && (
             <InlineCreateItem
               type={creatingItem.type}
@@ -313,11 +343,11 @@ function FolderItem({ folder, files, allFolders, currentFileId, expanded, collap
               onSelectFile={onSelectFile} onRenameFile={onRenameFile} onDeleteFile={onDeleteFile}
               onRenameFolder={onRenameFolder} onDeleteFolder={onDeleteFolder}
               onCreateFile={onCreateFile} onCreateSubFolder={onCreateSubFolder}
-              depth={depth + 1} />
+              depth={0} />
           ))}
           {folderFiles.map((file) => (
             <FileItem key={file._id} file={file} isActive={file._id === currentFileId}
-              onSelect={onSelectFile} onRename={onRenameFile} onDelete={onDeleteFile} depth={depth + 1} />
+              onSelect={onSelectFile} onRename={onRenameFile} onDelete={onDeleteFile} depth={0} />
           ))}
         </div>
       )}
@@ -549,7 +579,7 @@ export default function SidebarWrapper({
   return (
     <div
       className="flex flex-1 min-h-0 overflow-hidden"
-      style={{ fontFamily: "var(--font-ui), system-ui, -apple-system, sans-serif" }}
+      style={{ fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif" }}
     >
       {/* Sidebar panel */}
       <div
