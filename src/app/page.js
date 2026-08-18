@@ -6,7 +6,7 @@ import TopBar from "./components/TopBar";
 import EditorPanel from "./components/EditorPanel";
 import IOPanel from "./components/IOPanel";
 import Sidebar from "./components/Sidebar";
-import { LANGUAGES, THEME_KEY } from "./lib/constants";
+import { LANGUAGES, THEME_KEY, LANGUAGE_KEY } from "./lib/constants";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -21,6 +21,20 @@ function loadPersistedTheme() {
 function saveTheme(theme) {
   try {
     localStorage.setItem(THEME_KEY, theme);
+  } catch {}
+}
+
+function loadPersistedLanguage() {
+  try {
+    return localStorage.getItem(LANGUAGE_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+
+function saveLanguage(lang) {
+  try {
+    localStorage.setItem(LANGUAGE_KEY, lang);
   } catch {}
 }
 
@@ -98,6 +112,11 @@ export default function EditorPage() {
       document.documentElement.classList.remove("dark");
     }
 
+    const savedLanguage = loadPersistedLanguage();
+    if (savedLanguage && LANGUAGES[savedLanguage]) {
+      setLanguage(savedLanguage);
+    }
+
     fetch("/api/auth/me")
       .then(async (r) => {
         if (!r.ok) throw new Error("Not OK");
@@ -135,6 +154,7 @@ export default function EditorPage() {
   // ── Language change ───────────────────────────────────────────────────────
   const handleLanguageChange = useCallback((newLang) => {
     setLanguage(newLang);
+    saveLanguage(newLang);
   }, []);
 
   // ── Theme toggle ──────────────────────────────────────────────────────────
@@ -239,8 +259,10 @@ export default function EditorPage() {
       const data = await res.json();
       setCurrentFileId(data._id);
       setCurrentFileName(data.question);
-      setLanguage(data.language || defaultLang);
-      const fetchedCode = data.code ?? LANGUAGES[data.language || defaultLang].snippet;
+      const fileLang = data.language || defaultLang;
+      setLanguage(fileLang);
+      saveLanguage(fileLang);
+      const fetchedCode = data.code ?? LANGUAGES[fileLang].snippet;
       setCode(fetchedCode);
       setOriginalCode(fetchedCode);
       const fetchedInput = data.input || "";

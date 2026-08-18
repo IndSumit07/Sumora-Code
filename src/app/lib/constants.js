@@ -99,5 +99,6 @@ int main() {
 
 export const STORAGE_KEY = "cp-editor-state";
 export const THEME_KEY = "cp-editor-theme";
+export const LANGUAGE_KEY = "cp-editor-language";
 export const DEBOUNCE_MS = 800;
 export const STATE_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
