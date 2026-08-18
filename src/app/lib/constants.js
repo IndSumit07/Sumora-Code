@@ -6,13 +6,16 @@ export const LANGUAGES = {
     judge0Id: 62, // Java (OpenJDK 13.0.1)
     snippet: `import java.util.*;
 public class Main {
+    static void solve(Scanner sc) {
+        
+    }
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-
-        int t = sc.nextInt();
-        
-        while(t-->0){
-
+        if (sc.hasNextInt()) {
+            int t = sc.nextInt();
+            while(t-->0){
+                solve(sc);
+            }
         }
     }
 }
@@ -25,10 +28,20 @@ public class Main {
     snippet: `#include <bits/stdc++.h>
 using namespace std;
 
+void solve() {
+    
+}
+
 int main() {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     
+    int t;
+    if (cin >> t) {
+        while(t-->0) {
+            solve();
+        }
+    }
     
     return 0;
 }
@@ -41,10 +54,20 @@ int main() {
     snippet: `import sys
 input = sys.stdin.readline
 
-def main():
+def solve():
     pass
 
-main()
+def main():
+    try:
+        t = int(input().strip())
+        while t > 0:
+            solve()
+            t -= 1
+    except Exception:
+        pass
+
+if __name__ == "__main__":
+    main()
 `,
   },
   c: {
@@ -55,7 +78,17 @@ main()
 #include <stdlib.h>
 #include <string.h>
 
+void solve() {
+    
+}
+
 int main() {
+    int t;
+    if (scanf("%d", &t) == 1) {
+        while(t-->0) {
+            solve();
+        }
+    }
     
     return 0;
 }
