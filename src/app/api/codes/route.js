@@ -2,10 +2,25 @@ import { connectDB } from "@/app/lib/db";
 import CodeFile from "@/app/lib/models/CodeFile";
 import { requireAuth } from "@/app/lib/auth";
 
-export const GET = requireAuth(async (userId) => {
+// GET /api/codes - list files for the current user
+// Query params:
+//   ?folderId=root    → root-level files (folderId = null)
+//   ?folderId=<id>    → files inside a specific folder
+//   (no folderId)     → all files (legacy behaviour)
+export const GET = requireAuth(async (userId, request) => {
   try {
     await connectDB();
-    const files = await CodeFile.find({ userId }, "question language updatedAt folderId")
+    const { searchParams } = new URL(request.url);
+    const folderIdParam = searchParams.get("folderId");
+
+    const query = { userId };
+    if (folderIdParam === "root") {
+      query.folderId = null;
+    } else if (folderIdParam) {
+      query.folderId = folderIdParam;
+    }
+
+    const files = await CodeFile.find(query, "question language updatedAt folderId")
       .sort({ updatedAt: -1 })
       .lean();
     return Response.json(files);
@@ -14,6 +29,7 @@ export const GET = requireAuth(async (userId) => {
     return Response.json({ error: "Failed to fetch files" }, { status: 500 });
   }
 });
+
 
 export const POST = requireAuth(async (userId, request) => {
   try {

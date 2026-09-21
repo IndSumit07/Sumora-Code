@@ -60,15 +60,15 @@ export default function EditorPage() {
   const isDirty = code !== originalCode || input !== originalInput;
 
   // ── Sidebar + MongoDB state ──────────────────────────────────────────────
-  const [files, setFiles] = useState([]);
   const [currentFileId, setCurrentFileId] = useState(null);
   const [currentFileName, setCurrentFileName] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [saveStatus, setSaveStatus] = useState("idle");
   const [saveStatusVisible, setSaveStatusVisible] = useState(false);
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
   const [copySignal, setCopySignal] = useState(null);
+  // Bumped to tell sidebar to refresh its current view
+  const [sidebarRefresh, setSidebarRefresh] = useState(0);
 
 
   // ── Resize state ─────────────────────────────────────────────────────────
@@ -82,24 +82,8 @@ export default function EditorPage() {
   const ioColRef = useRef(null);
   const saveStatusTimerRef = useRef(null);
   const copySignalTimerRef = useRef(null);
-  const fetchingRef = useRef(false);
 
-  // ── Fetch files from MongoDB ─────────────────────────────────────────────
-  const fetchFiles = useCallback(async () => {
-    if (fetchingRef.current) return;
-    fetchingRef.current = true;
-    try {
-      const res = await fetch("/api/codes");
-      if (res.ok) {
-        const data = await res.json();
-        setFiles(data);
-      }
-    } catch {
-      // MongoDB may not be connected; silently ignore
-    } finally {
-      fetchingRef.current = false;
-    }
-  }, []);
+
 
   // ── On mount ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -127,7 +111,6 @@ export default function EditorPage() {
           router.replace("/login");
         } else {
           setUserEmail(data.email);
-          fetchFiles();
           setMounted(true);
         }
       })
@@ -219,7 +202,8 @@ export default function EditorPage() {
         setSaveStatus("saved");
         setOriginalCode(code || snippet);
         setOriginalInput(input);
-        await fetchFiles();
+        // Signal sidebar to refresh its view
+        setSidebarRefresh((t) => t + 1);
       } catch {
         setSaveStatus("error");
       }
@@ -239,17 +223,10 @@ export default function EditorPage() {
       setSaveStatus("saved");
       setOriginalCode(code);
       setOriginalInput(input);
-      setFiles((prev) =>
-        prev.map((f) =>
-          f._id === currentFileId
-            ? { ...f, language, updatedAt: new Date().toISOString() }
-            : f
-        )
-      );
     } catch {
       setSaveStatus("error");
     }
-  }, [currentFileId, language, code, input, saveStatus, fetchFiles]);
+  }, [currentFileId, language, code, input, saveStatus]);
 
   // ── Sidebar handlers ─────────────────────────────────────────────────────
   const handleSelectFile = useCallback(async (file) => {
@@ -293,58 +270,43 @@ export default function EditorPage() {
       setOriginalCode(snippet);
       setInput("");
       setOriginalInput("");
-      await fetchFiles();
+      // Sidebar refreshes itself via fetchView after onNewFile resolves
     } catch {
       // silently fail
     }
-  }, [language, fetchFiles, isDirty, handleSave]);
+  }, [language, isDirty, handleSave]);
 
 
 
-  const handleRenameFile = useCallback(
-    async (id, newName) => {
-      if (!id) return;
-      if (id === currentFileId) {
-        setCurrentFileName(newName);
-      }
-      try {
-        await fetch(`/api/codes/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: newName }),
-        });
-        setFiles((prev) =>
-          prev.map((f) =>
-            f._id === id ? { ...f, question: newName } : f
-          )
-        );
-      } catch {
-        // silently fail
-      }
-    },
-    [currentFileId]
-  );
+  // Called by sidebar when a file was renamed there (updates editor title bar)
+  const handleFileRenamed = useCallback((id, newName) => {
+    if (id === currentFileId) setCurrentFileName(newName);
+  }, [currentFileId]);
 
-  const handleDeleteFile = useCallback(async (id) => {
-    setDeleteConfirmId(id);
-  }, []);
-
-  const handleConfirmDelete = useCallback(async () => {
-    const id = deleteConfirmId;
-    setDeleteConfirmId(null);
-    if (!id) return;
+  // Called by sidebar when a file was renamed from editor title bar
+  const handleRenameCurrentFile = useCallback(async (newName) => {
+    if (!currentFileId) return;
+    setCurrentFileName(newName);
     try {
-      const res = await fetch(`/api/codes/${id}`, { method: "DELETE" });
-      if (!res.ok) return;
-      if (currentFileId === id) {
-        setCurrentFileId(null);
-        setCurrentFileName("");
-      }
-      setFiles((prev) => prev.filter((f) => f._id !== id));
-    } catch {
-      // silently fail
+      await fetch(`/api/codes/${currentFileId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: newName }),
+      });
+    } catch {}
+  }, [currentFileId]);
+
+  // Called by sidebar when a file is deleted (clear editor if it was open)
+  const handleFileDeleted = useCallback((id) => {
+    if (currentFileId === id) {
+      setCurrentFileId(null);
+      setCurrentFileName("");
+      setCode("");
+      setOriginalCode("");
+      setInput("");
+      setOriginalInput("");
     }
-  }, [deleteConfirmId, currentFileId]);
+  }, [currentFileId]);
 
 
   // ── Code execution ────────────────────────────────────────────────────────
@@ -579,15 +541,15 @@ export default function EditorPage() {
 
       <Sidebar
         isOpen={isSidebarOpen}
-        files={files}
         currentFileId={currentFileId}
         onSelectFile={handleSelectFile}
         onNewFile={handleNewFile}
-        onDeleteFile={handleDeleteFile}
-        onRenameFile={handleRenameFile}
+        onFileDeleted={handleFileDeleted}
+        onFileRenamed={handleFileRenamed}
         onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
         userEmail={userEmail}
         onLogout={handleLogoutClick}
+        refreshTrigger={sidebarRefresh}
       >
         {/* ── Main editor area (inside SidebarInset) ── */}
         <main className="flex flex-1 min-h-0 min-w-0" ref={editorAreaRef} role="main">
@@ -604,7 +566,7 @@ export default function EditorPage() {
                 onChange={(val) => setCode(val ?? "")}
                 theme={theme}
                 fileName={currentFileName || null}
-                onRename={(newName) => handleRenameFile(currentFileId, newName)}
+                onRename={handleRenameCurrentFile}
                 onCopy={handleCopy}
               />
             ) : (
@@ -642,31 +604,8 @@ export default function EditorPage() {
       </Sidebar>
 
 
-      {/* ── Delete confirm dialog ── */}
-      {deleteConfirmId && (
-        <div className={overlayClass} onClick={(e) => { if (e.target === e.currentTarget) setDeleteConfirmId(null); }}>
-          <div className={dialogClass}>
-            <div className="w-11 h-11 rounded-xl bg-red-500/10 flex items-center justify-center mx-auto mb-4">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
-              </svg>
-            </div>
-            <h3 className="text-sm font-bold text-[var(--text-primary)] text-center mb-1">Delete file?</h3>
-            <p className="text-xs text-[var(--text-secondary)] text-center font-mono mb-1">
-              {files.find((f) => f._id === deleteConfirmId)?.question ?? "this file"}
-            </p>
-            <p className="text-xs text-[var(--text-muted)] text-center mb-5">This action cannot be undone.</p>
-            <div className="flex gap-2">
-              <button className={`${btnBase} text-[var(--text-secondary)] bg-[var(--tb-btn-bg)] hover:bg-[var(--tb-btn-hover)]`} onClick={() => setDeleteConfirmId(null)}>
-                Cancel
-              </button>
-              <button className={`${btnBase} text-red-300 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30`} onClick={handleConfirmDelete}>
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Delete confirm is now handled inside Sidebar */}
+
 
       {/* ── Logout confirm dialog ── */}
       {logoutConfirmVisible && (
