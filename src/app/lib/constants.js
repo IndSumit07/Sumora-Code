@@ -6,17 +6,13 @@ export const LANGUAGES = {
         judge0Id: 62, // Java (OpenJDK 13.0.1)
         snippet: `import java.util.*;
 public class Main {
-    static void solve(Scanner sc) {
-        
-    }
+    
     public static void main(String[] args) {
+
         Scanner sc = new Scanner(System.in);
-        if (sc.hasNextInt()) {
-            int t = sc.nextInt();
-            while(t-->0){
-                solve(sc);
-            }
-        }
+        
+        
+
     }
 }
 `,
